@@ -1,0 +1,6 @@
+{{ define "main" }}
+{{ .Content }}
+<script src="/js/runtime.{{.Site.Data.webpack.hash}}.js"></script>
+<script src="/js/vendor.{{.Site.Data.webpack.hash}}.js"></script>
+<script src="/js/site/pages_{{path.Dir .Dir}}.{{.Site.Data.webpack.hash}}.js"></script>
+{{ end }}
