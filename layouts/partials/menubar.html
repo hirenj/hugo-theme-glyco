@@ -298,213 +298,216 @@ section.menu li ul li:last-child:after {
 section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   display: none;
 }
-  @media not screen
-    and (min-width: 320px)
-    and (max-width: 480px)
-    and (-webkit-min-device-pixel-ratio: 2) {
 
-    section.menu input#mobiletoggle {
-      display: none;
-    }
-    section.menu > ul > li.menuitem0 > ul > li:nth-child(1) > label {
-      padding-left: 1.1em;
-    }
+@media not screen
+  and (min-width: 320px)
+  and (max-width: 480px)
+  and (-webkit-min-device-pixel-ratio: 2) {
 
-    section.menu > ul > li.menuitem0 > ul > li:nth-child(2) > label {
-      padding-left: 1.5em;
-    }
-
-    section.menu > ul > li.menuitem0 > ul > li:nth-child(3) > label {
-      padding-left: 1.9em;
-    }
-
-
+  section.menu input#mobiletoggle {
+    display: none;
+  }
+  section.menu > ul > li.menuitem0 > ul > li:nth-child(1) > label {
+    padding-left: 1.1em;
   }
 
-@media 
-    not screen
-      and (min-width: 320px)
-      and (max-width: 480px)
-      and (-webkit-min-device-pixel-ratio: 2),
-    screen and (orientation: landscape) {
+  section.menu > ul > li.menuitem0 > ul > li:nth-child(2) > label {
+    padding-left: 1.5em;
+  }
 
-      section.menu > ul {
-        padding-left: calc( 0.75 * env(safe-area-inset-left) );
-      }
-      section.menu > ul > li.menuitem0 {
-        border-left: solid var(--menu-outline) var(--menu-border-width);      
-      }
+  section.menu > ul > li.menuitem0 > ul > li:nth-child(3) > label {
+    padding-left: 1.9em;
+  }
+
+}
+
+@media not screen
+  and (min-width: 320px)
+  and (max-width: 480px)
+  and (-webkit-min-device-pixel-ratio: 2),
+  screen and (orientation: landscape) {
+
+  section.menu > ul {
+    padding-left: calc( 0.75 * env(safe-area-inset-left) );
+  }
+  section.menu > ul > li.menuitem0 {
+    border-left: solid var(--menu-outline) var(--menu-border-width);      
+  }
 
 }
 
 
-  @media only screen
-    and (min-width: 320px)
-    and (max-width: 480px)
-    and (-webkit-min-device-pixel-ratio: 2) {
+@media only screen
+  and (min-width: 320px)
+  and (max-width: 480px)
+  and (-webkit-min-device-pixel-ratio: 2) {
 
-      section.menu * {
-        --menu-font: 9pt;
-        font-weight: normal;
-      }
-
-      section.menu ul li {
-        transition: height 0.5s, opacity 0.25s, max-height 0.5s;
-      }
-
-      section.menu li.mobiletoggle {
-        display: block;
-      }
-
-      section.menu label.mobiletoggle {
-        display: block;
-        position: absolute;
-        top: -3em;
-        left: 0em;
-        height: 2em;
-        width: 6em;
-        padding-top: 1em;
-      }
-
-      section.menu > input[type="checkbox"] ~ ul {
-        display: flex;
-        height: auto;
-        overflow: hidden;
-        border: 0px;
-      }
-
-      section.menu > input[type="checkbox"] ~ ul > li {
-        max-height: 0px;
-      }
-
-      section.menu > input[type="checkbox"]:checked ~ ul > li {
-        max-height: calc( 10 * var(--menu-height) );
-      }
-
-
-      section.menu ul input[type="checkbox"] ~ ul li {
-        height: 0px;
-        overflow: hidden;
-        opacity: 0;
-      }
-
-      section.menu ul input[type="checkbox"]:checked ~ ul {
-        display: flex;
-        flex-direction: column;
-        height: auto;
-      }
-
-      section.menu ul input[type="checkbox"] ~ label ~ ul {
-        height: auto;
-      }
-
-
-      section.menu ul input[type="checkbox"]:checked ~ ul li {
-        opacity: 1;
-        height: var(--menu-height);
-      }
-
-      section.menu input[type="checkbox"]:checked + label:before {
-        transform: translate(0px,0px);
-      }
-
-      section.menu input[type="checkbox"] + label:before {
-        content:  '▼';
-        padding: 0px;
-        transform: rotate(-90deg);
-        transition: transform 0.2s;
-        text-align: center;
-        vertical-align: middle;
-        line-height: 1em;
-        width: 1em;
-        height: 1em;
-      }
-
-      section.menu input[type="checkbox"]:checked + label.mobiletoggle:before {
-        transform: rotate(4500deg);
-        content: '✕';
-      }
-
-      section.menu input[type="checkbox"] + label.mobiletoggle:before {
-        top: 1.25em;
-        left: 0.25em;
-        transform: scale(1);
-        content:  '☰';
-      }
-
-      section.menu input[type="checkbox"] + label:before {
-        font-size: 1em;
-        left: 0.5em;
-        top: 0.95em;
-        color: var(--menu-foreground);
-        display: block;
-        position: absolute;
-      }
-
-      section.menu {
-        position: absolute;
-      }
-      section.menu > ul {
-        height: auto;
-      }
-      section.menu > ul li:before, section.menu > ul li:after, section.menu > ul li:last-child:after {
-        display: none;
-      }
-      section.menu li {
-        width: 100%;
-        margin: 0px;
-        border: 0;
-        transform: none;
-      }
-      section.menu li > * {
-        transform: none;
-      }
-      section.menu li > ul {
-        width: 100%;
-        left: 0px;
-        top: 0px;
-        border: 0px;
-        border-left: 0px;
-        border-right: 0px;
-        border-bottom: 0px;
-      }
-      section.menu li ul {
-        border: 0px;
-        border-left: 0px;
-        border-right: 0px;
-        border-bottom: 0px;
-        box-shadow: none;
-      }
-      section.menu li > ul li {
-        width: 100%;
-        left: 0px;
-      }
-      section.menu > input[type="checkbox"] + label + ul > li > label {
-        padding-left: 2em;
-        padding-top: 0.5em;
-        padding-bottom: 0.5em;
-      }
-
-
-      section.menu > input[type="checkbox"]:checked + label + ul > li > label {
-      }
-
-      section.menu li > input[type="checkbox"]:checked + label + ul li {
-        padding-top: 0.2em;
-        padding-bottom: 0.5em;
-      }
-      section.menu li > input[type="checkbox"]:checked + label + ul li:last-child {
-        padding-bottom: 0px;
-      }
-
-      section.menu label, section.menu li ul li label {
-        padding: 0px;
-        padding-left: 2em;
-      }
-
+  section.menu * {
+    --menu-font: 9pt;
+    font-weight: normal;
   }
 
-x-searchbox::part(root) * {
+  section.menu ul li {
+    transition: height 0.5s, opacity 0.25s, max-height 0.5s;
+  }
+
+  section.menu li.mobiletoggle {
+    display: block;
+  }
+
+  section.menu label.mobiletoggle {
+    display: block;
+    position: absolute;
+    top: -3em;
+    left: 0em;
+    height: 2em;
+    width: 6em;
+    padding-top: 1em;
+  }
+
+  section.menu > input[type="checkbox"] ~ ul {
+    display: flex;
+    height: auto;
+    overflow: hidden;
+    border: 0px;
+  }
+
+  section.menu > input[type="checkbox"] ~ ul > li {
+    max-height: 0px;
+  }
+
+  section.menu > input[type="checkbox"]:checked ~ ul > li {
+    max-height: calc( 10 * var(--menu-height) );
+  }
+
+  section.menu ul input[type="checkbox"] ~ ul li {
+    height: 0px;
+    overflow: hidden;
+    opacity: 0;
+  }
+
+  section.menu ul input[type="checkbox"]:checked ~ ul {
+    display: flex;
+    flex-direction: column;
+    height: auto;
+  }
+
+  section.menu ul input[type="checkbox"] ~ label ~ ul {
+    height: auto;
+  }
+
+
+  section.menu ul input[type="checkbox"]:checked ~ ul li {
+    opacity: 1;
+    height: var(--menu-height);
+  }
+
+  section.menu input[type="checkbox"]:checked + label:before {
+    transform: translate(0px,0px);
+  }
+
+  section.menu input[type="checkbox"] + label:before {
+    content:  '▼';
+    padding: 0px;
+    transform: rotate(-90deg);
+    transition: transform 0.2s;
+    text-align: center;
+    vertical-align: middle;
+    line-height: 1em;
+    width: 1em;
+    height: 1em;
+  }
+
+  section.menu input[type="checkbox"]:checked + label.mobiletoggle:before {
+    transform: rotate(4500deg);
+    content: '✕';
+  }
+
+  section.menu input[type="checkbox"] + label.mobiletoggle:before {
+    top: 1.25em;
+    left: 0.25em;
+    transform: scale(1);
+    content:  '☰';
+  }
+
+  section.menu input[type="checkbox"] + label:before {
+    font-size: 1em;
+    left: 0.5em;
+    top: 0.95em;
+    color: var(--menu-foreground);
+    display: block;
+    position: absolute;
+  }
+
+  section.menu {
+    position: absolute;
+  }
+
+  section.menu > ul {
+    height: auto;
+  }
+
+  section.menu > ul li:before, section.menu > ul li:after, section.menu > ul li:last-child:after {
+    display: none;
+  }
+
+  section.menu ul > li {
+    width: 100%;
+    margin: 0px;
+    border: 0;
+    transform: none;
+  }
+
+  section.menu section.menu ul > li, ul > li > *, section.menu li ul li > * {
+    transform: none;
+  }
+
+  section.menu li > ul {
+    width: 100%;
+    left: 0px;
+    top: 0px;
+    border: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    border-bottom: 0px;
+  }
+  section.menu li ul {
+    border: 0px;
+    border-left: 0px;
+    border-right: 0px;
+    border-bottom: 0px;
+    box-shadow: none;
+  }
+  section.menu li > ul li {
+    width: 100%;
+    left: 0px;
+  }
+  section.menu > input[type="checkbox"] + label + ul > li > label {
+    padding-left: 2em;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+  }
+
+
+  section.menu > input[type="checkbox"]:checked + label + ul > li > label {
+  }
+
+  section.menu li > input[type="checkbox"]:checked + label + ul li {
+    padding-top: 0.2em;
+    padding-bottom: 0.5em;
+  }
+  section.menu li > input[type="checkbox"]:checked + label + ul li:last-child {
+    padding-bottom: 0px;
+  }
+
+  section.menu label, section.menu li ul li label {
+    padding: 0px;
+    padding-left: 2em;
+  }
+
+}
+
+section.menu x-searchbox::part(root) * {
   --main-color: var(--main-color);
   --foreground-color: var(--foreground-color);
   --base-color-darkest: var(--base-color-darkest);
@@ -516,11 +519,11 @@ x-searchbox::part(root) * {
   --foreground-color: var(--foreground-color);
 }
 
-x-searchbox::part(root) {
+section.menu  x-searchbox::part(root) {
   --dropdown-font-weight: lighter;
 }
 
-section.menu .search {
+section.menu x-searchbox::part(form) {
   width: 15em;
   margin-right: 1em;
   --result-rows: 3;
@@ -530,28 +533,34 @@ section.menu .search {
   left: 0em;
   color: #000;
 }
+
 @media only screen
   and (min-width: 320px)
   and (max-width: 480px)
   and (-webkit-min-device-pixel-ratio: 2) {
-    section.menu .search {
-      min-height: 1.5em;
-      margin-right: 0;
-      top: 0;
-    }
-    section.menu .search {
-      width: calc( 100% - 2em );
-    }
+
+  section.menu x-searchbox::part(form) {
+    min-height: 1.5em;
+    margin-right: 0;
+    top: 0;
+  }
+
+  section.menu x-searchbox::part(form) {
+    width: calc( 100% - 2em );
+  }
+
 }
 
-x-searchbox[menu]::part(button) {
+section.menu x-searchbox[menu]::part(button) {
   box-shadow: none;
   padding: 0px;
 }
-x-searchbox[menu]::part(button) {
+
+section.menu x-searchbox[menu]::part(button) {
   margin-left: 0em;
 }
-x-searchbox[menu]::part(button):after, x-searchbox[menu]::part(button):before {
+
+section.menu x-searchbox[menu]::part(button):after, x-searchbox[menu]::part(button):before {
   box-shadow: none;
 }
 </style>

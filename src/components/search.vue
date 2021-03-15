@@ -1,5 +1,5 @@
 <template>
-<form class="search" :data-loading="loading ? '' : false" v-focusfirst v-on:reset="search=''; $event.target.querySelector('#search').focus(); " @submit.prevent>
+<form part="form" class="search" :data-loading="loading ? '' : false" v-focusfirst v-on:reset="search=''; $event.target.querySelector('#search').focus(); " @submit.prevent>
   <header><input v-model="search" id="search" :autofocus="isroot" required type="search" placeholder="Gene or UniProt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" v-on:keydown="jumptoresults"/><button type="reset" v-on:click="search_results = false" /></header>
   <ul class="dropdown-menu">
     <template v-if="options.length < 1 && search_results && !search_dirty && search.length > 0">
