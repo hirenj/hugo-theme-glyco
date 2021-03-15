@@ -1,5 +1,23 @@
 let bootstraps = [];
 
+
+class TriggerablePromise {
+  constructor() {
+    this.queue = [];
+  }
+  trigger() {
+    for (let func of this.queue) {
+      func.call();
+    }
+  }
+  get promise() {
+    let result = new Promise( resolve => {
+      this.queue.push(resolve);
+    });
+    return result;
+  }
+}
+
 function reserveBootstrapSlot() {
   return new Promise(resolve => {
     bootstraps.push(resolve);
@@ -7,18 +25,18 @@ function reserveBootstrapSlot() {
 }
 
 function queueBootstrapSlot(func) {
-  bootstraps.push(func);
+  let trigger = new TriggerablePromise();
+  bootstraps.push( () => {
+    trigger.trigger();
+  });
+  return trigger.promise.then(func);
 }
 
-function fireBootstraps() {
-  console.log('Firing',bootstraps.length);
+async function fireBootstraps() {
+  console.log('Firing Boostrapping queue',bootstraps.length);
   for (let func of bootstraps) {
-    func.call();
+    await Promise.resolve().then(func);
   }
 }
-
-reserveBootstrapSlot().then( () => {
-  console.log('Post firing of bootstrap slot');
-})
 
 export { fireBootstraps, queueBootstrapSlot, reserveBootstrapSlot };

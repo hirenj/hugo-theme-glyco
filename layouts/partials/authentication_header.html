@@ -1,0 +1,5 @@
+{{ if .Site.Params.full_authentication }}
+	<script src="/js/theme/partials_full_auth.{{.Site.Data.webpack.hash}}.js"></script>
+{{ else }}
+	<script src="/js/theme/partials_simple_auth.{{.Site.Data.webpack.hash}}.js"></script>
+{{ end }}
