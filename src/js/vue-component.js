@@ -68,12 +68,35 @@ class VueComponentElement extends WrapHTML {
     return this.shadowRoot;
   }
 
+  inputSlotChanged(ev) {
+    if ( this.component ) {
+      return;
+    }
+    const parent = this.shadowRoot.querySelector('div.output');
+
+    let style_elements = ev.target.assignedNodes().filter( el => el instanceof HTMLStyleElement );
+    let other_elements = ev.target.assignedNodes().filter( el => style_elements.indexOf(el) < 0 );
+    this.template_text = other_elements.map( el => el instanceof HTMLElement ? el.outerHTML : el.textContent ).join('\n');
+    parent.innerHTML = this.template_text;
+    for (let style of style_elements) {
+      this.shadowRoot.appendChild(style);
+    }
+    let default_data = {};
+    for (let key of (this.getAttribute('props') || '').split(' ')) {
+      default_data[key] = null;
+    }
+    this.component = new Vue({
+        el: parent,
+        data: default_data,
+        components: this.components,
+    });
+  }
+
   connectedCallback() {
     if (window.ShadyCSS) {
       ShadyCSS.styleElement(this);
     }
     this.attachShadow({mode:'open'}).appendChild(tmpl.content.cloneNode(true));
-
     const parent = this.shadowRoot.querySelector('div.output');
     this.shadowRoot.querySelector('slot[name="output"]').addEventListener('slotchange', (ev) => {
       if (this.output_el) {
@@ -100,25 +123,7 @@ class VueComponentElement extends WrapHTML {
     });
     const slot = this.shadowRoot.querySelector('slot');
     slot.addEventListener('slotchange', (ev) => {
-      if ( this.component ) {
-        return;
-      }
-      let style_elements = ev.target.assignedNodes().filter( el => el instanceof HTMLStyleElement );
-      let other_elements = ev.target.assignedNodes().filter( el => style_elements.indexOf(el) < 0 );
-      this.template_text = other_elements.map( el => el instanceof HTMLElement ? el.outerHTML : el.textContent ).join('\n');
-      parent.innerHTML = this.template_text;
-      for (let style of style_elements) {
-        this.shadowRoot.appendChild(style);
-      }
-      let default_data = {};
-      for (let key of (this.getAttribute('props') || '').split(' ')) {
-        default_data[key] = null;
-      }
-      this.component = new Vue({
-          el: parent,
-          data: default_data,
-          components: this.components,
-      });
+      this.inputSlotChanged.call(this,ev);
     });
   }
 

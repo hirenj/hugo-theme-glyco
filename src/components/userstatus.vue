@@ -1,9 +1,9 @@
 <template>
   <label v-if="user != 'anonymous'">
-  {{ user }}
+  <span class="username">{{ user }}</span><button class="glyco" v-on:click="logout">Log out &nbsp;&raquo;</button>
   </label>
   <label v-else v-on:click="login" style="cursor: pointer;" >
-    Log in
+    Log in &nbsp;&raquo;
   </label>
 </template>
 

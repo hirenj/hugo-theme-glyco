@@ -1,3 +1,4 @@
+{{ partial "user_components.html" . }}
 <header class="pageheader">
 <section class="logo">
   {{ if .Title }}
@@ -7,13 +8,9 @@
     <h1>{{.Title}}</h1>
     <a class="center" href="https://glycomics.ku.dk"></a>
   {{ end }}
-<!--   <template v-if="user !== 'anonymous'">
-    <span class="user"><span class="username">{userName}</span><a v-on:click="logout">logout &nbsp;&raquo;</a></span>
-  </template>
-  <template v-if="title && (user === 'anonymous')">
-    <span class="user"><a v-on:click="login">Log In &nbsp;&raquo;</a></span>
-  </template>
- -->
+  {{ if not .Params.skip_authentication }}
+    <span class="user"><x-userstatus/></span>
+  {{ end }}
  </section>
  {{ if not .Params.skip_menubar }}
  {{ partial "menubar.html" . }}

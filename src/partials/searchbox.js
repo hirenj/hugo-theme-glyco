@@ -22,6 +22,16 @@ class SearchBox extends VueComponentElement {
   get components() {
     return COMPONENTS;
   }
+
+  inputSlotChanged(ev) {
+    let inner_html = this.innerHTML;
+    if ( inner_html.indexOf('searchbox') < 0) {
+      this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}">${this.innerHTML}</searchbox>`;
+      return;
+    }
+    super.inputSlotChanged(ev);
+  }
+
   connectedCallback() {
     super.connectedCallback();
 

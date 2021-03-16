@@ -22,12 +22,13 @@
       </li>
       {{ end }}
       {{ if .Site.Params.main_menu_search }}
-      <li><label style="min-height: var(--menu-height);"><x-searchbox menu class="search"> <searchbox v-bind:species="{{ .Site.Params.main_menu_search_species | default 9606 }}">
-{{ partial "search_result_links.html" . }}
-      </searchbox> </x-searchbox></label></li>
+      <li><label style="min-height: var(--menu-height);">
+      <x-searchbox menu species="{{ .Site.Params.main_menu_search_species | default 9606 }}" class="search">{{ partial "search_result_links.html" . }}
+</x-searchbox></label></li>
       {{ end }}
   </ul>
 </section>
+
 <style>
 section.menu {
   --menu-outline: var(--main-border-color);
