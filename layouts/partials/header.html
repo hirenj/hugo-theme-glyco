@@ -15,7 +15,9 @@
   </template>
  -->
  </section>
+ {{ if not .Params.skip_menubar }}
  {{ partial "menubar.html" . }}
+ {{ end }}
 </header>
 
 <style>

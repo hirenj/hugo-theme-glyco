@@ -2,7 +2,7 @@ import auth0 from 'auth0-js';
 
 export { getUserId, getUserName, performLogout, authorizedFetch } from './basic';
 
-import { getStoredToken, TOKEN_KEY } from './basic';
+import { getStoredToken, isCurrentToken, TOKEN_KEY, performLogout } from './basic';
 
 import MASCP from 'mascp-jstools';
 
@@ -22,7 +22,7 @@ const auth_object = fetch(LOGIN_CONFIG_URL).then(function(response) {
     domain: MASCP.AUTH0_DOMAIN,
     audience: MASCP.AUTH0_AUDIENCE,
     scope: MASCP.AUTH0_SCOPES,
-    redirectUri: window.location.origin +"/loggedin",
+    redirectUri: window.location.origin +"/loggedin/",
     popupOrigin: window.location.origin,
     responseType: 'token id_token'
   });
@@ -137,7 +137,8 @@ const parseLogin = function() {
 };
 
 MASCP.GatorDataReader.addUnauthorizedListener(() => {
-  return handle_unauthorised();
+  console.log('Unauthorised');
+  // return handle_unauthorised();
 });
 
 let login_status;

@@ -127,4 +127,4 @@ const getLoginStatus = () => {
 
 
 
-export { getLoginStatus, getUserId, getUserName, performLogout, authorizedFetch, ensureApiLogin, getStoredToken, TOKEN_KEY };
+export { getLoginStatus, getUserId, getUserName, performLogout, authorizedFetch, ensureApiLogin, getStoredToken, TOKEN_KEY, isCurrentToken };

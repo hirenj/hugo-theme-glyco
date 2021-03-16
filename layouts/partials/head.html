@@ -6,7 +6,10 @@
 	<script src="/js/commons.{{.Site.Data.webpack.hash}}.js"></script>
 	<script src="/js/vendor.{{.Site.Data.webpack.hash}}.js"></script>
 	<script src="/js/theme/common_bootstrap.{{.Site.Data.webpack.hash}}.js"></script>
-	{{ partial "authentication_header.html" . }}
+	{{ if .Params.skip_authentication }}
+	{{ else }}
+		{{ partial "authentication_header.html" . }}
+	{{ end }}
 	<style>
 	body, html {
 	  margin: 0;

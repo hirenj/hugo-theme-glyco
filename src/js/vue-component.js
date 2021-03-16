@@ -28,7 +28,7 @@ tmpl.innerHTML = `
 <slot></slot>
 </div>
 <slot name="output"></slot>
-<div part="root" id="output">
+<div part="root" class="output">
 </div>
 `;
 
@@ -60,14 +60,21 @@ class VueComponentElement extends WrapHTML {
     });
   }
 
+  setupRoot() {
+    return this.attachShadow({mode:'open'});
+  }
+
+  get rootel() {
+    return this.shadowRoot;
+  }
+
   connectedCallback() {
     if (window.ShadyCSS) {
       ShadyCSS.styleElement(this);
     }
-    let shadowRoot = this.attachShadow({mode: 'open'});
-    shadowRoot.appendChild(tmpl.content.cloneNode(true));
+    this.attachShadow({mode:'open'}).appendChild(tmpl.content.cloneNode(true));
 
-    const parent = this.shadowRoot.querySelector('div#output');
+    const parent = this.shadowRoot.querySelector('div.output');
     this.shadowRoot.querySelector('slot[name="output"]').addEventListener('slotchange', (ev) => {
       if (this.output_el) {
         return;
@@ -77,7 +84,7 @@ class VueComponentElement extends WrapHTML {
       this.output_el = new_output;
       this.output_el.style.display = 'contents';
 
-      this.shadowRoot.querySelector('div#output').innerHTML = '';
+      this.shadowRoot.querySelector('div.output').innerHTML = '';
 
       new_output.innerHTML = this.template_text;
 
