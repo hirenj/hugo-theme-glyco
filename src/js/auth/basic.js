@@ -1,11 +1,8 @@
 import MASCP from 'mascp-jstools';
 
-// import { updateUserFieldToAnonymous } from './mixins/tryuser';
-/*
 MASCP.GatorDataReader.server = process.env.ROOT_API;
 
 MASCP.GATOR_CLIENT_ID=process.env.CLIENT_ID;
-*/
 
 const TOKEN_KEY = 'idToken';
 
