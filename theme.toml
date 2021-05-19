@@ -10,9 +10,11 @@ tags = []
 features = []
 min_version = "0.41.0"
 
+
 [params]
   main_menu_search = true
   main_menu_search_species = 9606
+  default_color = "233.5"
 
 
 [author]
