@@ -1,1 +1,1 @@
-<script src="/js/theme/partials_searchbox.{{.Site.Data.webpack.hash}}.js"></script>
+<script src="{{ .Site.Data.webpack.hash | printf "/js/theme/partials_searchbox.%s.js" | relURL }}"></script>

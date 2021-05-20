@@ -1,4 +1,4 @@
 {{ define "main" }}
 {{ .Content }}
-<script src="/js/site/pages_{{path.Dir .Dir}}.{{.Site.Data.webpack.hash}}.js"></script>
+<script src="{{ .Site.Data.webpack.hash | printf "/js/site/pages_{{path.Dir .Dir}}.%s.js" | absURL }}"></script>
 {{ end }}
