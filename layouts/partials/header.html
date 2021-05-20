@@ -2,7 +2,7 @@
 <header class="pageheader">
 <section class="logo">
   {{ if .Title }}
-    <a href="/"></a>
+    <a class="home" href="{{ "/" | relURL }}"></a>
     <h1>{{.Title}}</h1>
   {{ else }}
     <h1>{{.Title}}</h1>
@@ -101,7 +101,7 @@ header.pageheader section.logo a.center + span.user {
     margin-left: -10px;
   }
 
-  header.pageheader section.logo > a[href='/'] {
+  header.pageheader section.logo > a.home] {
     display: none;
   }
 
@@ -115,7 +115,7 @@ header.pageheader section.logo a.center + span.user {
 
 }
 
-header.pageheader section.logo > a[href='/'] {
+header.pageheader section.logo > a.home {
   display: inline-block;
   height: 100%;
   width: 6em;
