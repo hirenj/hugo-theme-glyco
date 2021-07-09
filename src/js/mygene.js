@@ -127,7 +127,7 @@ const lookup_gene = (geneid) => {
 };
 
 const lookup_protein = (uniprot) => {
-  return perform_protein_lookup(uniprot).then( r => { return { desc: r.name, protein: r.protein.recommendedName.fullName.value, symbol: (r.gene[0] || { name: '' }).name.value  } } );
+  return perform_protein_lookup(uniprot).then( r => { return { desc: r.name, protein: r.protein.recommendedName.fullName.value, symbol: r.gene[0]?.name?.value || r.gene[0]?.orfNames[0]?.value  } } );
 };
 
 const search = (query,species=9606) => {
