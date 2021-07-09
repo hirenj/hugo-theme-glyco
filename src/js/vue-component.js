@@ -51,7 +51,7 @@ class VueComponentElement extends WrapHTML {
   }
 
   get data() {
-    return this.component.$data;
+    return this.component?.$data;
   }
 
   get update() {
@@ -90,6 +90,8 @@ class VueComponentElement extends WrapHTML {
         data: default_data,
         components: this.components,
     });
+    let evObj = new Event('ready', {bubbles: false, cancelable: false});
+    this.dispatchEvent(evObj);
   }
 
   connectedCallback() {
@@ -112,8 +114,12 @@ class VueComponentElement extends WrapHTML {
       new_output.innerHTML = this.template_text;
 
       let default_data = {};
-      for (let key of (this.getAttribute('props') || '').split(' ')) {
-        default_data[key] = null;
+      if (! this.component) {
+        for (let key of (this.getAttribute('props') || '').split(' ')) {
+          default_data[key] = null;
+        }
+      } else {
+        default_data = this.component.$data;
       }
       this.component = new Vue({
           el: new_output,
