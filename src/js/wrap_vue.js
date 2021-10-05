@@ -37,6 +37,12 @@ export default function wrapVue(vueComponent,name=vueComponent.name?.toLowerCase
       }
     }
 
+    async updateData(key,value) {
+      for (let child of this.component.$children) {
+        child.$data[key] = value;
+      }
+      await this.component.$nextTick();
+    }
 
     get components() {
       return COMPONENTS;

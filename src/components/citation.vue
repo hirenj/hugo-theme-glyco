@@ -2,7 +2,7 @@
 <div style="display: contents;">
   <template v-if="loading"><a :href="'https://doi.org/'+doi">{{doi}}</a></template>
   <template v-else>
-    <div style="display: contents;" v-if="citation !== ''"><a target="_blank" :href="'https://doi.org/'+citation.DOI">{{citation.author[0].family || citation.author[0].name }} <em>et al.</em> {{citation['container-title-short']}} {{citation.issued['date-parts'][0][0]}}</a></div>
+    <div style="display: contents;" v-if="citation !== ''"><a target="_blank" :href="citation.url? citation.url : 'https://doi.org/'+citation.DOI">{{citation.author[0].family || citation.author[0].name }} <em>et al.</em> {{citation['container-title-short']}} {{citation.issued['date-parts'][0][0]}}</a></div>
     <div v-else>Reference not available</div>
   </template>
 </div>

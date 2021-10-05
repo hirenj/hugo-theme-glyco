@@ -90,8 +90,10 @@ class VueComponentElement extends WrapHTML {
         data: default_data,
         components: this.components,
     });
-    let evObj = new Event('ready', {bubbles: false, cancelable: false});
-    this.dispatchEvent(evObj);
+    if ( ! this.querySelector('*[slot]')) {
+      let evObj = new Event('ready', {bubbles: false, cancelable: false});
+      this.dispatchEvent(evObj);
+    }
   }
 
   connectedCallback() {
@@ -105,7 +107,10 @@ class VueComponentElement extends WrapHTML {
         return;
       }
 
-      let new_output = ev.target.assignedNodes()[0];
+      let new_output_parent = ev.target.assignedNodes()[0];
+      let new_output = document.createElement('div');
+      new_output_parent.appendChild(new_output);
+      new_output.style.display = 'contents';
       this.output_el = new_output;
       this.output_el.style.display = 'contents';
 
@@ -126,6 +131,8 @@ class VueComponentElement extends WrapHTML {
           data: default_data,
           components: this.components,
       });
+      let evObj = new Event('ready', {bubbles: false, cancelable: false});
+      this.dispatchEvent(evObj);
     });
     const slot = this.shadowRoot.querySelector('slot');
     slot.addEventListener('slotchange', (ev) => {
