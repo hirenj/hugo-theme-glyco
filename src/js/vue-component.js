@@ -60,6 +60,15 @@ class VueComponentElement extends WrapHTML {
     });
   }
 
+  /* The top-level component for a VueComponent is the
+   * root vue element, that contains the template. Data
+   * that is set upon the component is set upon the root
+   * template
+   */
+  get component() {
+    return this.vueroot;
+  }
+
   setupRoot() {
     return this.attachShadow({mode:'open'});
   }
@@ -69,7 +78,7 @@ class VueComponentElement extends WrapHTML {
   }
 
   inputSlotChanged(ev) {
-    if ( this.component ) {
+    if ( this.vueroot ) {
       return;
     }
     const parent = this.shadowRoot.querySelector('div.output');
@@ -85,7 +94,7 @@ class VueComponentElement extends WrapHTML {
     for (let key of (this.getAttribute('props') || '').split(' ')) {
       default_data[key] = null;
     }
-    this.component = new Vue({
+    this.vueroot = new Vue({
         el: parent,
         data: default_data,
         components: this.components,
@@ -119,14 +128,14 @@ class VueComponentElement extends WrapHTML {
       new_output.innerHTML = this.template_text;
 
       let default_data = {};
-      if (! this.component) {
+      if (! this.vueroot) {
         for (let key of (this.getAttribute('props') || '').split(' ')) {
           default_data[key] = null;
         }
       } else {
-        default_data = this.component.$data;
+        default_data = this.vueroot.$data;
       }
-      this.component = new Vue({
+      this.vueroot = new Vue({
           el: new_output,
           data: default_data,
           components: this.components,

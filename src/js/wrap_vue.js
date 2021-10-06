@@ -27,20 +27,30 @@ export default function wrapVue(vueComponent,name=vueComponent.name?.toLowerCase
       return props;
     }
 
+    /* Props are pulled in from the data in the root vue element,
+       so we should reflect the attributes for the custom element
+       in the data for the root.
+     */
+
     async attributeChangedCallback(name) {
       if ( ! this.data ) {
         this.addEventListener('ready', () => {
-          this.data[name] = this.getAttribute(name);
+          this.vueroot.$data[name] = this.getAttribute(name);
         });
       } else {
-        this.data[name] = this.getAttribute(name);        
+        this.vueroot.$data[name] = this.getAttribute(name);        
       }
     }
 
+    /* We are wrapping a single component here, so we skip over the VueRoot
+       that we have defined, and go straight for the wrapped component
+     */
+    get component() {
+      return this.vueroot?.$children[0];
+    }
+
     async updateData(key,value) {
-      for (let child of this.component.$children) {
-        child.$data[key] = value;
-      }
+      this.data[key] = value;
       await this.component.$nextTick();
     }
 
