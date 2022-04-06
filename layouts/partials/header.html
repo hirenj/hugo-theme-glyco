@@ -2,7 +2,11 @@
 <header class="pageheader">
 <section class="logo">
   {{ if .Title }}
-    <a class="home" href="{{ "/" | relURL }}"></a>
+    {{ if isset .Site.Params "home_link_url" }}
+      <a class="home" href="{{ .Site.Params.home_link_url }}"></a>
+    {{ else }}
+      <a class="home" href="{{ "/" | relURL }}"></a>
+    {{ end }}
     <h1>{{.Title}}</h1>
   {{ else }}
     <h1>{{.Title}}</h1>
