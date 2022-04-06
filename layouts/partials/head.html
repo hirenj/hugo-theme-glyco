@@ -2,10 +2,12 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 	<link href="{{ "/css/glycosuite.css" | relURL }}" rel="stylesheet" type="text/css">
+	{{ if .Site.Data.webpack.hash }}
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/runtime.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/commons.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/vendor.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/theme/common_bootstrap.%s.js" | relURL }}"></script>
+	{{ end }}
 	{{ if .Params.skip_authentication }}
 	{{ else }}
 		{{ partial "authentication_header.html" . }}

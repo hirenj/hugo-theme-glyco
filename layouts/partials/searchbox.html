@@ -1,1 +1,3 @@
+{{ if .Site.Data.webpack.hash }}
 <script src="{{ .Site.Data.webpack.hash | printf "/js/theme/partials_searchbox.%s.js" | relURL }}"></script>
+{{ end }}

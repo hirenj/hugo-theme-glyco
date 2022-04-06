@@ -1,5 +1,7 @@
+{{ if .Site.Data.webpack.hash }}
 {{ if .Site.Params.full_authentication }}
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/theme/partials_full_auth.%s.js" | relURL }}"></script>
 {{ else }}
 	<script src="{{ .Site.Data.webpack.hash | printf "/js/theme/partials_simple_auth.%s.js" | relURL }}"></script>
+{{ end }}
 {{ end }}

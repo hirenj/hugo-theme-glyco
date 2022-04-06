@@ -1,4 +1,6 @@
 {{ define "main" }}
 {{ .Content }}
+{{ if .Site.Data.webpack.hash }}
 <script src="/js/theme/_default_login_callback.{{.Site.Data.webpack.hash}}.js"></script>
+{{ end }}
 {{ end }}
