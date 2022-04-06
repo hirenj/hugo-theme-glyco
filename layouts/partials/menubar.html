@@ -64,7 +64,7 @@ section.menu {
   --submenu-height: calc( var(--menu-font) * 1.25 + 6px + 1em);
   --menu-item-width: 155px;
   --menu-border-width: 1px;
-  z-index: 1;
+  z-index: var(--header-z-index);
   /* NOSELECT */
   -webkit-touch-callout: none; /* iOS Safari */
     -webkit-user-select: none; /* Safari */
@@ -364,6 +364,7 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   section.menu * {
     --menu-font: 9pt;
     font-weight: normal;
+    --submenu-height: calc( var(--menu-font) * 2 + 6px);
   }
 
   section.menu ul li {
@@ -501,8 +502,17 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
     width: 100%;
     left: 0px;
   }
+
+
+  section.menu > input[type="checkbox"] + label + ul > li > input[type="checkbox"] + label + ul {
+    --menu-height: var(--submenu-height);
+  }
+
   section.menu > input[type="checkbox"] + label + ul > li label {
     padding-left: 2em;
+  }
+
+  section.menu > input[type="checkbox"] + label + ul > li > input[type="checkbox"] + label {
     padding-top: 0.5em;
     padding-bottom: 0.5em;
   }
@@ -511,10 +521,6 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   section.menu > input[type="checkbox"]:checked + label + ul > li label {
   }
 
-  section.menu li > input[type="checkbox"]:checked + label + ul li {
-    padding-top: 0.2em;
-    padding-bottom: 0.5em;
-  }
   section.menu li > input[type="checkbox"]:checked + label + ul li:last-child {
     padding-bottom: 0px;
   }

@@ -23,8 +23,14 @@
 </header>
 
 <style>
+:root {
+  --header-z-index:  10;
+}
 header.pageheader {
-  z-index: 1;
+  z-index: var(--header-z-index);
+}
+#content {
+  z-index:  0;
 }
 
 header.pageheader section.logo {
