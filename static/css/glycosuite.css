@@ -1,7 +1,7 @@
 :root {
   --base-hue: 233.5;
   --base-saturation: 29.5%;
-  --base-lum: 69;
+  --base-lum: 59;
   --should-invert-fg: 1;
 
 /* GalNAc */
@@ -35,12 +35,24 @@
   --darker-saturation: calc( var(--base-saturation) + 3% );
   --darker-lum: calc( var(--base-lum-percent) - 25% );
 
+  --lighter-saturation: calc( var(--base-saturation) - 20% );
+  --ligher-lum: calc( var(--base-lum-percent) + 25% );
+
+
   --base-color: hsl(var(--base-hue), var(--base-saturation), var(--base-lum-percent));
   --base-color-darker: hsl(var(--base-hue),var(--darker-saturation),var(--base-lum-percent));
   --base-color-darkest: hsl(var(--base-hue),var(--darker-saturation),var(--darker-lum));
+  --base-color-lighter: hsl(var(--base-hue),var(--lighter-saturation),var(--base-lum-percent));
+  --base-color-lightest: hsl(var(--base-hue),var(--lighter-saturation),var(--lighter-lum));
+
+
 
   --main-color: var(--base-color);
+  --inactive-main-color: var(--base-color-lighter);
+  --disabled-main-color: var(--base-color-lightest);
   --main-border-color: hsl(var(--base-hue),calc( var(--base-saturation) + 50%),calc( var(--base-lum-percent) - 50% )); /* #33075e;*/
+  --inactive-main-border-color: hsl(var(--base-hue),var(--lighter-saturation),calc( var(--base-lum-percent) - 20% ));
+
   --darker-medium-main-color: var(--base-color-darker);
   --darker-main-color: var(--base-color-darkest);
   --highlight-color: hsl(calc( var(--base-hue) - 120 ), var(--base-saturation), var(--base-lum-percent) ); /* #9fc89a  */
@@ -59,7 +71,7 @@ button {
   filter: sepia(100%) invert(1) saturate(2000%) grayscale(100%);
 }
 
-h3,h4,button.glyco,a.glyco {
+h3,h4,button.glyco,a.glyco,div.glyco.spacer {
   display: inline-block;
   white-space: nowrap;
   position: relative;
@@ -81,7 +93,7 @@ a.glyco {
   font-size: calc( 1em - 2px );
 }
 
-h3:before,h3:after,h4:before,h4:after,button.glyco:before,button.glyco:after,a.glyco:before,a.glyco:after {
+h3:before,h3:after,h4:before,h4:after,button.glyco:before,button.glyco:after,a.glyco:before,a.glyco:after,div.glyco.spacer:before,div.glyco.spacer:after {
   display: block;
   position: absolute;
   width: 1em;
@@ -98,7 +110,7 @@ h3:before,h3:after,h4:before,h4:after,button.glyco:before,button.glyco:after,a.g
   background: var(--main-color);
 }
 
-h3:after,h4:after,button.glyco:after,a.glyco:after {
+h3:after,h4:after,button.glyco:after,a.glyco:after,div.glyco.spacer:after {
   left: calc(100% - 0.5em);
   border-width: 1px 1px 1px 0px;
   border-bottom-left-radius: 0;
@@ -114,7 +126,7 @@ h3,h4,h3:before,h3:after,h4:before,h4:after {
 
 }
 
-button.glyco, button.glyco:after, a.glyco, a.glyco:after {
+button.glyco, button.glyco:after, a.glyco, a.glyco:after.div.glyco.spacer:after {
   --button-drop-shadow-size: 3px;
   --button-shadow-alpha: 0.3;
   background: var(--darker-medium-main-color);
@@ -154,6 +166,28 @@ button.glyco:hover, button.glyco:hover:before, button.glyco:hover:after, a.glyco
   color: var(--foreground-color);
   cursor: pointer;
 }
+
+div.glyco.spacer {
+  margin-right:  0.5em;
+  width:  0px;
+  padding:  0px;
+  opacity: 0.8;
+}
+
+div.glyco.spacer:before, div.glyco.spacer:after {
+  width:  0.3em;
+  border-bottom-right-radius: 0px;
+  left:  0.15em;
+}
+
+
+div.glyco.spacer:before {
+  display: none;
+  border-radius:  0px;
+  left: calc( 100% - 0.15em );
+}
+
+
 
 h1,h2 {
   font-family: 'Verdana','Helvetica',sans-serif;
@@ -206,6 +240,8 @@ section.datasources p .data_title {
   background-color: var(--error-color);
 }
 *[data-loading].glyco-loader {
+  font-family: Arial, Verdana;
+  font-size: 10pt;
   padding-right: 2em;
   display: inline-block;
   position: relative;

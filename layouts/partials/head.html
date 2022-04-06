@@ -15,9 +15,11 @@
 	  margin: 0;
 	  height:100%
 	}
+	{{ if (isset .Site.Params "default_color" ) }}
 	:root {
 		--base-hue: {{ .Site.Params.default_color }};
 	}
+	{{ end  }}
 	</style>
 	{{ partial "global_styles.html" . }}
 </head>
