@@ -5,26 +5,8 @@
   <label class="mobiletoggle" for="mobiletoggle"></label>
   <ul>
     <li class="mobiletoggle"><x-userstatus/></li>
-    {{ $currentPage := . }}
-      {{ range $idx, $item := .Site.Menus.main.Reverse }}
-      <li class="menuitem{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
-        {{ if .HasChildren }}
-          <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
-          <label for="menu{{$idx}}">{{ $item.Name }}</label>
-          <ul>
-            {{ range .Children }}
-              {{ if hasPrefix .URL ".." }}
-              <li><label><a href="{{ .URL | relURL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
-              {{ else }}
-              <li><label><a href="{{ .URL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
-              {{ end }}
-            {{ end }}
-          </ul>
-        {{ else }}
-          <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
-        {{ end }}
-      </li>
-      {{ end }}
+      {{ $currentPage := . }}
+      {{ partial "render_menu.html" . }}
       {{ $scratch := newScratch }}
 
       {{ if isset .Site.Params "main_menu_search" }}
@@ -93,7 +75,6 @@ section.menu input[type="radio"], section.menu input[type="checkbox"] {
 }
 
 section.menu input[type="checkbox"]:checked + label + ul {
-  display: block;
   height: auto;
   visibility: visible;
   transform: skewX(0deg);
@@ -336,15 +317,15 @@ section.menu > ul > li:not([class^="menuitem"]).mobiletoggle {
   section.menu input#mobiletoggle {
     display: none;
   }
-  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(1) > label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(1) > ul > li:nth-child(1) > label {
     padding-left: 1.1em;
   }
 
-  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(2) > label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(1) > ul > li:nth-child(2) > label {
     padding-left: 1.5em;
   }
 
-  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(3) label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(1) > ul > li:nth-child(3) label {
     padding-left: 1.9em;
   }
 

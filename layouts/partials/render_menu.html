@@ -1,0 +1,19 @@
+      {{ range $idx, $item := .Site.Menus.main.Reverse }}
+      <li class="menuitem{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+        {{ if .HasChildren }}
+          <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
+          <label for="menu{{$idx}}">{{ $item.Name }}</label>
+          <ul>
+            {{ range .Children }}
+              {{ if hasPrefix .URL ".." }}
+              <li><label><a href="{{ .URL | relURL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+              {{ else }}
+              <li><label><a href="{{ .URL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+              {{ end }}
+            {{ end }}
+          </ul>
+        {{ else }}
+          <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+        {{ end }}
+      </li>
+      {{ end }}
