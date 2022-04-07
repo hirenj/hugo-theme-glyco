@@ -6,7 +6,7 @@
   <ul>
     <li class="mobiletoggle"><x-userstatus/></li>
     {{ $currentPage := . }}
-      {{ range $idx, $item := .Site.Menus.main }}
+      {{ range $idx, $item := .Site.Menus.main.Reverse }}
       <li class="menuitem{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
         {{ if .HasChildren }}
           <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
@@ -64,6 +64,8 @@ section.menu {
   --submenu-height: calc( var(--menu-font) * 1.25 + 6px + 1em);
   --menu-item-width: 155px;
   --menu-border-width: 1px;
+  --menu-box-shadow-color: rgba(70,70,70,0.2);
+  --menu-shadow-definition:  2px 3px 5px 1px;
   z-index: var(--header-z-index);
   /* NOSELECT */
   -webkit-touch-callout: none; /* iOS Safari */
@@ -113,11 +115,11 @@ section.menu > ul, label a {
 section.menu > ul {
   margin: 0px;
   display: flex;
-  flex-direction: row;
+  flex-direction: row-reverse;
 
   flex-wrap: wrap;
   align-items: flex-end;
-  justify-content: flex-start;
+  justify-content: flex-end;
 
   background: var(--menu-background);
   text-transform: uppercase;
@@ -281,7 +283,7 @@ section.menu li ul {
   border-right: solid var(--menu-outline) var(--menu-border-width);
   border-bottom: solid var(--menu-outline) var(--menu-border-width);
   background: var(--menu-background);
-  box-shadow: 2px 3px 2px 0px rgba(200,200,200,0.5);
+  box-shadow: var(--menu-shadow-definition) var(--menu-box-shadow-color);
 }
 
 section.menu li ul li {
@@ -318,6 +320,14 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   display: none;
 }
 
+section.menu > ul > li:not([class^="menuitem"]) {
+  order:  -1;
+}
+
+section.menu > ul > li:not([class^="menuitem"]).mobiletoggle {
+  order:  1;
+}
+
 @media not screen
   and (min-width: 320px)
   and (max-width: 480px)
@@ -326,15 +336,15 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   section.menu input#mobiletoggle {
     display: none;
   }
-  section.menu > ul > li.menuitem0 > ul > li:nth-child(1) label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(1) > label {
     padding-left: 1.1em;
   }
 
-  section.menu > ul > li.menuitem0 > ul > li:nth-child(2) label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(2) > label {
     padding-left: 1.5em;
   }
 
-  section.menu > ul > li.menuitem0 > ul > li:nth-child(3) label {
+  section.menu > ul > li[class^="menuitem"]:nth-last-of-type(2) > ul > li:nth-child(3) label {
     padding-left: 1.9em;
   }
 
@@ -349,7 +359,7 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
   section.menu > ul {
     padding-left: calc( 0.75 * env(safe-area-inset-left) );
   }
-  section.menu > ul > li.menuitem0 {
+  section.menu > ul > li[class^="menuitem"]:last-child {
     border-left: solid var(--menu-outline) var(--menu-border-width);      
   }
 
@@ -366,6 +376,12 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
     font-weight: normal;
     --submenu-height: calc( var(--menu-font) * 2 + 6px);
   }
+
+  section.menu > ul {
+    flex-direction: column-reverse;
+    box-shadow: var(--menu-shadow-definition) var(--menu-box-shadow-color);
+  }
+
 
   section.menu ul li {
     transition: height 0.5s, opacity 0.25s, max-height 0.5s;
@@ -491,13 +507,16 @@ section.menu label.mobiletoggle, section.menu li.mobiletoggle {
     border-right: 0px;
     border-bottom: 0px;
   }
+
   section.menu li ul {
     border: 0px;
     border-left: 0px;
     border-right: 0px;
     border-bottom: 0px;
     box-shadow: none;
+    border-radius: 0px;
   }
+
   section.menu li > ul li {
     width: 100%;
     left: 0px;
