@@ -4,6 +4,7 @@
   <input id="mobiletoggle" type="checkbox">
   <label class="mobiletoggle" for="mobiletoggle"></label>
   <ul>
+    <li class="mobiletoggle"><label><a href="/" title="Home">Home</a></label></li>
     <li class="mobiletoggle"><x-userstatus/></li>
       {{ $currentPage := . }}
       {{ partial "render_menu.html" . }}
@@ -512,7 +513,7 @@ section.menu > ul > li:not([class^="menuitem"]).mobiletoggle {
     padding-left: 2em;
   }
 
-  section.menu > input[type="checkbox"] + label + ul > li > input[type="checkbox"] + label {
+  section.menu > input[type="checkbox"] + label + ul > li > input[type="checkbox"] + label, section.menu > input[type="checkbox"] + label + ul > li > label {
     padding-top: 0.5em;
     padding-bottom: 0.5em;
   }
