@@ -67,6 +67,10 @@ button {
   font-size: 11px;
 }
 
+button.big {
+  font-size:  1.5em;
+}
+
 .contrast {
   filter: sepia(100%) invert(1) saturate(2000%) grayscale(100%);
 }
@@ -126,24 +130,18 @@ h3,h4,h3:before,h3:after,h4:before,h4:after {
 
 }
 
-button.glyco, button.glyco:after, a.glyco, a.glyco:after.div.glyco.spacer:after {
+button.glyco, button.glyco:after, a.glyco, a.glyco:after, .div.glyco.spacer:after {
   --button-drop-shadow-size: 3px;
   --button-shadow-alpha: 0.3;
   background: var(--darker-medium-main-color);
 }
 
-button.glyco:after, a.glyco:after {
-  box-shadow: calc( 1px + 1.5 * var(--button-drop-shadow-size)) var(--button-drop-shadow-size) var(--button-drop-shadow-size) 0px hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha));
-}
-
-
-button.glyco:before, a.glyco:before {
-  box-shadow: calc( -1 * var(--button-drop-shadow-size) ) calc( 1px + var(--button-drop-shadow-size)) var(--button-drop-shadow-size) 0px hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha));
-}
-
-
 button.glyco,a.glyco {
-  box-shadow: 0px calc( 1px + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) - 1px ) 0px hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha));
+  box-shadow: calc( -0.6em + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) + 1px ) var(--button-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha)) ;
+}
+
+button.glyco:after, a.glyco:after {
+  box-shadow: calc( 1px + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) + 1px ) var(--button-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha)) ;
 }
 
 button.glyco {
@@ -225,6 +223,53 @@ section.datasources p .data_title {
   font-style: italic;
   color: #aaa;
 }
+
+section.info_card {
+  position: relative;
+  border-radius: 0px 0px 10px 10px;
+  background:  rgba(250,250,250,255);
+  --info_card-drop-shadow-size: 3px;
+  --info_card-shadow-alpha: 0.3;
+  /*filter: drop-shadow( calc( 1px + var(--info_card-drop-shadow-size)) calc( var(--info_card-drop-shadow-size) + 1px ) var(--info_card-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--info_card-shadow-alpha)));*/
+  box-shadow: calc( 1px + var(--info_card-drop-shadow-size)) calc( var(--info_card-drop-shadow-size) + 1px ) var(--info_card-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--info_card-shadow-alpha)) ;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width:  100%;
+}
+
+section.info_card > * {
+  margin-left:  1em;
+  margin-right:  1em;
+  width:  calc( 100% - 2em );
+}
+
+section.info_card > a.glyco , section.info_card > button.glyco {
+  font-size: 0.9em;
+}
+
+section.info_card > h3 + * {
+  margin-top:  0em;
+}
+
+
+section.info_card > *:last-child {
+  margin-bottom:  1em;
+}
+
+section.info_card > button:last-child, section.info_card > a:last-child {
+  width:  min-content;
+  align-self:  end;
+  margin-right:  2em;
+}
+
+section.info_card h3 {
+  margin-top: 0px;
+  margin-left: calc(0.5em + 3px);
+  width: calc(100% - 1em - 3px);
+}
+
 
 .toasted-container .glycosuite.toasted {
   font-family: 'Verdana', 'Helvetica', sans-serif;
