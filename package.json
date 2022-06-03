@@ -1,0 +1,41 @@
+{
+  "name": "hugo-theme-glyco",
+  "version": "1.0.0",
+  "description": "Glyco hugo theme",
+  "scripts": {
+    "build": ". ./.env.prod; ./node_modules/.bin/webpack --config webpack.prod.conf.js",
+    "build-watch-web": "./node_modules/.bin/webpack --watch --config webpack.dev.conf.js",
+    "start": ". ./.env.dev; ./node_modules/.bin/webpack --watch --config webpack.dev.conf.js",
+    "deploy": "rm -rf dist && ./node_modules/.bin/webpack --config webpack.prod.conf.js && ./deploy.sh prod"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:hirenj/hugo-theme-glyco.git"
+  },
+  "author": "hirenj@gmail.com",
+  "license": "MIT",
+  "dependencies": {
+    "auth0-js": "^9.10.2",
+    "glycan.js": "github:hirenj/glycan.js",
+    "mascp-jstools": "github:hirenj/mascp-jstools#nolegacy",
+    "sviewer": "github:hirenj/sviewer",
+    "@babel/core": "^7",
+    "@babel/preset-env": "",
+    "babel-loader": "^8.0.5",
+    "compression-webpack-plugin": "^3.0.0",
+    "core-js": "3",
+    "css-loader": "^2.1.1",
+    "fs-extra": "^9.1.0",
+    "object.fromentries": "^2.0.1",
+    "raw-loader": "^3.1.0",
+    "terser-webpack-plugin": "^4.2.3",
+    "vue": "^2.6.10",
+    "vue-loader": "^15.7.2",
+    "vue-style-loader": "^4.1.2",
+    "vue-template-compiler": "^2.6.10",
+    "webpack": "^4.29.6",
+    "webpack-cli": "^3.3.0",
+    "webpack-dev-server": "^3.2.1",
+    "webpack-merge": "^4.2.2"
+  }
+}
