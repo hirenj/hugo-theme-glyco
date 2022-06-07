@@ -3,6 +3,11 @@
 {{ $hash := .Site.Data.webpack.hash }}
 {{ with .File }}
 	{{ $page_dir := path.Dir .Dir }}
+	{{ if eq $page_dir "/" }}
+      {{ $page_dir := "index" }}
 	<script src="{{ $hash | printf "/js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
+	{{ else }}
+	<script src="{{ $hash | printf "/js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
+	{{ end }}
 {{ end }}
 {{ end }}
