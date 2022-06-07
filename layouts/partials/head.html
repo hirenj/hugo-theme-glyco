@@ -18,11 +18,17 @@
 	  margin: 0;
 	  height:100%
 	}
-	{{ if (isset .Site.Params "default_color" ) }}
 	:root {
+	{{ if (isset .Site.Params "default_color" ) }}
 		--base-hue: {{ .Site.Params.default_color }};
-	}
 	{{ end  }}
+	{{ if (isset .Site.Params "default_lum" ) }}
+		--base-lum: {{ .Site.Params.default_lum }};
+	{{ end  }}
+	{{ if (isset .Site.Params "default_sat" ) }}
+		--base-saturation: {{ .Site.Params.default_sat }}%;
+	{{ end  }}
+	}
 	</style>
 	{{ partial "global_styles.html" . }}
 </head>
