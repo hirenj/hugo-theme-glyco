@@ -41,7 +41,7 @@ let jsFiles = [...find_files(path.join(process.cwd(),'src/pages/')),...find_file
 
 jsFiles.forEach((filepath) => {
   let filename = path.basename(filepath);
-  let js_scope = filepath.indexOf('themes') === 0 ? 'theme' : 'site' ;
+  let js_scope = path.resolve(__dirname,filepath).indexOf(path.resolve(__dirname,"..")) === 0 ? 'theme' : 'site' ;
   let file_type = path.basename(path.dirname(filepath));
   let file_base = path.parse(filename).name;
   if (path.parse(filename).ext === '.js') entry[`${js_scope}/${file_type}_${file_base}`] = path.resolve(__dirname,filepath);
