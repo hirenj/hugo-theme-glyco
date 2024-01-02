@@ -1,5 +1,5 @@
 {{ if .Site.Data.webpack.hash }}
 {{ if .Site.Params.full_authentication }}
-	<script src="{{ .Site.Data.webpack.hash | printf "/js/theme/partials_user_components.%s.js" | relURL }}"></script>
+	<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/partials_user_components.%s.js" | relURL }}"></script>
 {{ end }}
 {{ end }}

@@ -6,6 +6,8 @@ const style_el = document.head.lastChild;
 
 style_el.parentNode.removeChild(style_el);
 
+const css_base_url = document.head.querySelector('[rel="css_base_url"]').href;
+
 const COMPONENTS = {
   searchbox: SearchComponent
 };
@@ -14,7 +16,7 @@ const tmpl = document.createElement('template');
 
 tmpl.innerHTML = `
 <style>
-  @import url("/css/glycosuite.css")
+  @import url("${base_url_css}/glycosuite.css")
 </style>
 `;
 
