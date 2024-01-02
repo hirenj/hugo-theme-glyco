@@ -16,7 +16,7 @@ const tmpl = document.createElement('template');
 
 tmpl.innerHTML = `
 <style>
-  @import url("${base_url_css}/glycosuite.css")
+  @import url("${css_base_url}/glycosuite.css")
 </style>
 `;
 
