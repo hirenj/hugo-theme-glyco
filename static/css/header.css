@@ -1,3 +1,5 @@
+@import "pageheader_common.css";
+
 :root {
   --header-z-index:  10;
 }
@@ -8,4 +10,3 @@ header.pageheader {
   z-index:  0;
 }
 
-@import url("pageheader_common.css")

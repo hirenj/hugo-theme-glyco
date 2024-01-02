@@ -1,4 +1,4 @@
-@import url("menubar_common.css")
+@import "menubar_common.css";
 
 section.menu x-searchbox::part(root) * {
   --main-color: var(--main-color);
