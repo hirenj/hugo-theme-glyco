@@ -109,7 +109,7 @@ class VueComponentElement extends WrapHTML {
     if (window.ShadyCSS) {
       ShadyCSS.styleElement(this);
     }
-    this.attachShadow({mode:'open'}).appendChild(tmpl.content.cloneNode(true));
+    this.attachShadow({mode:'open', delegatesFocus: true}).appendChild(tmpl.content.cloneNode(true));
     const parent = this.shadowRoot.querySelector('div.output');
     this.shadowRoot.querySelector('slot[name="output"]').addEventListener('slotchange', (ev) => {
       if (this.output_el) {

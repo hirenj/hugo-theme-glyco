@@ -25,6 +25,10 @@ class SearchBox extends VueComponentElement {
     return COMPONENTS;
   }
 
+  set value(val) {
+    this.component.$children[0].search = val;
+  }
+
   inputSlotChanged(ev) {
     let inner_html = this.innerHTML;
     if ( inner_html.indexOf('searchbox') < 0) {
