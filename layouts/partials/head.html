@@ -10,6 +10,13 @@
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/commons.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/vendor.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/common_bootstrap.%s.js" | relURL }}"></script>
+	{{ else }}
+		<script>
+			console.log(
+			  "%cNo hash set from webpack, make sure you are doing the webpack build",
+			  "color: white; font-size: 20px; background-color: red;"
+			);
+		</script>
 	{{ end }}
 	{{ if .Params.skip_authentication }}
 	{{ else }}
