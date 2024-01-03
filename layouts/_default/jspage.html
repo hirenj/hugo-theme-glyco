@@ -1,5 +1,7 @@
 {{ define "main" }}
+<section>
 {{ .Content }}
+</section>
 {{ $hash := .Site.Data.webpack.hash }}
 {{ with .File }}
 	{{ $page_dir := path.Dir .Dir }}
