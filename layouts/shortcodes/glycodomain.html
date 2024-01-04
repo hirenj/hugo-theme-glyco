@@ -1,0 +1,16 @@
+{{ $id := "protviewer" }}
+{{ if (.Get 0) }}
+  {{ $id := (.Get 0) }}
+{{ end }}
+<x-summary-protviewer id="{{ $id }}" interactive >
+  <x-gatortrack name="ptms" fullname="Modifications" scale="uniprot" ></x-gatortrack>
+  <x-gatortrack name="predictions" fullname="NetOGlyc4.0" scale="uniprot" ></x-gatortrack>
+  <x-gatortrack name="domains" fullname="Domains" scale="uniprot" ></x-gatortrack>
+  <x-gatortrack name="composition_summary" fullname="Glycan evidence" scale="uniprot" ></x-gatortrack>
+</x-summary-protviewer>
+<x-trackrenderer track="domains" renderer="{{ $id }}" src="{{ "glycodomain.packed.renderer.js" | absLangURL }}">
+</x-trackrenderer>
+<x-trackrenderer track="predictions" renderer="{{ $id }}" src="{{ "predictions.renderer.js" | absLangURL }}">
+</x-trackrenderer>
+<x-trackrenderer track="ptms" renderer="{{ $id }}" src="{{ "msdata.packed.renderer.js" | absLangURL }}">
+</x-trackrenderer>
