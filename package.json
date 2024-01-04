@@ -19,6 +19,7 @@
     "glycan.js": "github:hirenj/glycan.js",
     "mascp-jstools": "github:hirenj/mascp-jstools#nolegacy",
     "sviewer": "github:hirenj/sviewer",
+    "summary-protviewer": "github:hirenj/summary-protviewer.js",
     "@babel/core": "^7",
     "@babel/preset-env": "",
     "babel-loader": "^8.0.5",
