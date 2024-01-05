@@ -1,11 +1,11 @@
 <template>
-<form part="form" class="search" :data-loading="loading ? '' : false" v-focusfirst v-on:reset="search=''; $event.target.querySelector('#search').focus(); " @submit.prevent>
+<form part="form" class="search" novalidate="novalidate" :data-loading="loading ? '' : false" v-focusfirst v-on:reset="search=''; $event.target.querySelector('#search').focus(); " @submit.prevent>
   <header><input v-model="search" id="search" :autofocus="isroot" required type="search" placeholder="Gene or UniProt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" v-on:keydown="jumptoresults"/><button type="reset" v-on:click="search_results = false" /></header>
   <ul class="dropdown-menu">
     <template v-if="options.length < 1 && search_results && !search_dirty && search.length > 0">
       <div class="noresults">No results</div>
     </template>
-    <li v-for="(option,itemidx) in options">
+    <li v-for="(option,itemidx) in options" v-on:click="focusItem($event, itemidx)" >
         <input type="radio" value="" name="search" :id="`search${itemidx}`" v-on:keydown="radiokey" v-on:change="fixTabOrders" v-on:focus="scrollIfNeeded" /><div class="d-center"><label :for="`search${itemidx}`">{{option.symbol}} <span class="alias">{{ option.matching_aliases }}</span></label>
           <slot v-bind:option="option">
 <a v-if="option.geneid" part="button" class="glyco" :href="'/glymap/geneid/'+option.geneid+(option.search_snp?'?snp='+option.search_snp:'')">Gene</a>
@@ -142,13 +142,14 @@ export default {
   },
   methods: {
     jumptoresults: function(ev) {
-      if (ev.keyCode === 40 && this.$el.querySelector('#search0')) {
-        this.$el.querySelector('#search0').focus();
-        this.$el.querySelector('#search0').checked = true;
+      let first_result = this.$el.querySelector('[id="search0"]');
+      if (ev.keyCode === 40 && first_result) {
+        first_result.focus();
+        first_result.checked = true;
       }
-      if (ev.keyCode === 13 && this.$el.querySelector('#search0')) {
-        this.$el.querySelector('#search0').checked = true;        
-        this.$el.querySelector('#search0').nextElementSibling.querySelector('a.quickaction').click();
+      if (ev.keyCode === 13 && first_result) {
+        first_result.checked = true;        
+        first_result.nextElementSibling.querySelector('a.quickaction').click();
         ev.preventDefault();
       }
     },
@@ -157,13 +158,17 @@ export default {
         ev.target.nextElementSibling.querySelector('a.quickaction').click();
       }
     },
-    fixTabOrders: function() {
-      for (let el of this.$el.querySelectorAll('.dropdown-menu input[type=radio]:not(:checked) + .d-center > a')) {
+    fixTabOrders: function(ev) {
+      for (const el of this.$el.querySelectorAll('.dropdown-menu input[type=radio]:not(:checked) + .d-center > a')) {
         el.setAttribute('tabindex','-1');
       }
-      for (let el of this.$el.querySelectorAll('.dropdown-menu input[type=radio]:checked + .d-center > a')) {
+      for (const el of this.$el.querySelectorAll('.dropdown-menu input[type=radio]:checked + .d-center > a')) {
         el.setAttribute('tabindex','0');
       }
+    },
+    focusItem: function(ev,itemidx) {
+      this.$el.querySelector(`#search${itemidx}`).checked = true;
+      this.$el.querySelector('.dropdown-menu input[type=radio]:checked').focus();
     },
     scrollIfNeeded: function(ev) {
       scroll(ev.target.parentNode,this.$el);
@@ -342,6 +347,7 @@ input[type=radio] {
   height: 0px;
   position: fixed;
 }
+
 .dropdown, .dropdown-menu {
   font-size: 0.85em;
   margin: 0px;
@@ -401,7 +407,7 @@ div.noresults {
   font-size: 1em;
 }
 
-.dropdown-menu:focus-within {
+.dropdown-menu, .dropdown-menu:focus-within {
   background: #eee;
 }
 
@@ -413,11 +419,13 @@ div.noresults {
   background: var(--main-color);
   color: var(--foreground-color);
   font-weight: bolder;
-}
-
-.dropdown-menu:focus-within input[type=radio]:checked + .d-center {
   box-shadow: 0px 3px 9px rgba(0,0,0,.5);
   border: solid transparent 1px;
+}
+
+.dropdown-menu input[type=radio] + .d-center:hover {
+  background: #eaeaee;
+  box-shadow: 0px 1px 5px rgba(0,0,0,.5);
 }
 
 .dropdown-menu .d-center {
@@ -438,12 +446,10 @@ div.noresults {
   overflow: hidden;
   flex: 1;
   margin-left: 0.5em;
+  margin-right: 1em;
   font-weight: var(--dropdown-font-weight);
 }
 
-label + a + a {
-  margin-right: 1.5em;
-}
 span.alias {
   font-style: oblique;
   font-size: 0.75em;
