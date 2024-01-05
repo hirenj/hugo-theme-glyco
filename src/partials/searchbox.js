@@ -41,11 +41,11 @@ class SearchBox extends VueComponentElement {
   connectedCallback() {
     super.connectedCallback();
 
-    this.shadowRoot.appendChild(style_el);
+    this.shadowRoot.appendChild(style_el.cloneNode(true));
 
     this.style.display = 'block';
     this.shadowRoot.appendChild(tmpl.content.cloneNode(true));
-
+    this.inputSlotChanged();
   }
 }
 
