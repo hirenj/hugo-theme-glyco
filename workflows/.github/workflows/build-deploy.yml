@@ -1,0 +1,40 @@
+name: Build and Deploy
+on:
+  workflow_call:
+    secrets:
+      ENV_PROD:
+        required: true
+
+
+jobs:
+
+  build:
+    uses: ./.github/workflows/build_hugo.yml
+    secrets:
+      ENV_PROD: ${{ secrets.ENV_PROD }}
+
+  build_deploy:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Checkout 🛎️
+        uses: actions/checkout@v4
+
+      - name: Download Artifact
+        uses: actions/download-artifact@master
+        with:
+          name: docs
+          path: docs
+
+      - name: Fix github hosting
+        run: |
+          touch docs/.nojekyll
+          #echo 'viral.glycomics.ku.dk' > docs/CNAME
+
+      - name: Deploy 🚀
+        uses: JamesIves/github-pages-deploy-action@v4.3.3
+        with:
+          branch: www-prod
+          folder: docs
+          target-folder: docs
