@@ -4,7 +4,7 @@ import { reserveBootstrapSlot } from './bootstrap';
 
 import { getData, retrieveUniprot } from './gator';
 
-async function loadData(value) {
+async function loadDefaultData(value) {
   console.log('Default data loader',value);
   if ( document.querySelector('x-trackrenderer[track="domains"]')) {
     getData('glycodomain',value).then( dat => {
@@ -68,7 +68,7 @@ let set_sequence = function(uniprot) {
 
 const retrieveData =  async (uniprot) => {
   let seq = await set_sequence(uniprot);
-  await loadData(uniprot);
+  await loadDefaultData(uniprot);
   return uniprot;
 };
 
