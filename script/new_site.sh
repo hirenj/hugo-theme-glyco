@@ -3,6 +3,11 @@
 hugo new site . --force
 mv hugo.toml config.toml
 echo 'theme = "hugo-theme-glyco"' >> config.toml
+echo 'publishDir = "docs"' >> config.toml
+echo 'disableRSS = true' >> config.toml
+echo 'disableSitemap = true' >> config.toml
+echo 'disableKinds = ["RSS","sitemap","taxonomy","taxonomyTerm"]' >> config.toml
+
 git submodule add git@github.com:hirenj/hugo-theme-glyco themes/hugo-theme-glyco
 git add config.toml
 git commit -m 'Initial site'
