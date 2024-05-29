@@ -115,7 +115,7 @@ var render_peptide = function(peptide) {
 	(peptide.sites || []).forEach(function renderSite(site_block) {
 		var site = site_block[0];
 		has_site = true;
-		var composition = site_block[1];
+		var composition = site_block[1].replace(/\d+x/,'');
 		let is_sugar = true;
 		if (composition === "HexNAc") {
 			composition = 'galnac';

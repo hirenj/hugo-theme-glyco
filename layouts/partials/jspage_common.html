@@ -9,7 +9,6 @@
 	{{ else }}
 	  {{ $page_dir := replace $page_dir "/" "_" }}
 	  {{ $page_parent := (path.Dir (path.Dir (path.Split .Path).Dir)) }}
-	  {{ $hash | printf "./js/site/pages_%s_.%s.js" $page_parent }}
 	  {{ if fileExists ($hash | printf "static/js/site/pages_%s_.%s.js" $page_parent) }}
 	<script src="{{ $hash | printf "js/site/pages_%s_.%s.js" $page_parent | relURL }}"></script>
 	  {{ end }}
