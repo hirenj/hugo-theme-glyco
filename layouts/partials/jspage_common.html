@@ -1,0 +1,20 @@
+{{ $hash := .Site.Data.webpack.hash }}
+{{ with .File }}
+	{{ $page_dir := path.Dir .Dir }}
+	{{ if eq $page_dir "/" }}
+      {{ $page_dir := "index" }}
+	  {{ if fileExists ($hash | printf "./js/site/pages_%s.%s.js" $page_dir) }}
+	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
+	  {{ end }}
+	{{ else }}
+	  {{ $page_dir := replace $page_dir "/" "_" }}
+	  {{ $page_parent := (path.Dir (path.Dir (path.Split .Path).Dir)) }}
+	  {{ $hash | printf "./js/site/pages_%s_.%s.js" $page_parent }}
+	  {{ if fileExists ($hash | printf "static/js/site/pages_%s_.%s.js" $page_parent) }}
+	<script src="{{ $hash | printf "js/site/pages_%s_.%s.js" $page_parent | relURL }}"></script>
+	  {{ end }}
+	  {{ if fileExists ($hash | printf "static/js/site/pages_%s.%s.js" $page_dir) }}
+	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
+	  {{ end }}
+	{{ end }}
+{{ end }}

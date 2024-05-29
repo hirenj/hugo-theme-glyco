@@ -2,15 +2,7 @@
 <section>
 {{ .Content }}
 </section>
-{{ $hash := .Site.Data.webpack.hash }}
-{{ with .File }}
-	{{ $page_dir := path.Dir .Dir }}
-	{{ if eq $page_dir "/" }}
-      {{ $page_dir := "index" }}
-	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
-	{{ else }}
-	  {{ $page_dir := replace $page_dir "/" "_" }}
-	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
-	{{ end }}
-{{ end }}
+
+{{ partial "jspage_common.html" . }}
+
 {{ end }}

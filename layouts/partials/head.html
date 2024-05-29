@@ -8,7 +8,9 @@
 	{{ if .Site.Data.webpack.hash }}
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/runtime.%s.js" | relURL }}"></script>
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/commons.%s.js" | relURL }}"></script>
+	{{ if fileExists (.Site.Data.webpack.hash | printf "static/js/vendor.%s.js") }}
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/vendor.%s.js" | relURL }}"></script>
+	{{ end }}
 	<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/common_bootstrap.%s.js" | relURL }}"></script>
 	{{ else }}
 		<script>
