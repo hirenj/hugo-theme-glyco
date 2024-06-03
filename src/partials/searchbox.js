@@ -31,11 +31,8 @@ class SearchBox extends VueComponentElement {
 
   inputSlotChanged(ev) {
     let inner_html = this.innerHTML;
-    if ( inner_html.indexOf('searchbox') < 0) {
+    if ( inner_html != '' && inner_html.indexOf('searchbox') < 0) {
       this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}">${this.innerHTML}</searchbox>`;
-      if (ev) {
-        super.inputSlotChanged(ev);
-      }
       return;
     }
     if (ev) {
@@ -50,7 +47,6 @@ class SearchBox extends VueComponentElement {
 
     this.style.display = 'block';
     this.shadowRoot.appendChild(tmpl.content.cloneNode(true));
-    this.inputSlotChanged();
   }
 }
 
