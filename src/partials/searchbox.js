@@ -2,11 +2,11 @@ import VueComponentElement from '../js/vue-component.js';
 
 import SearchComponent from '../components/search.vue';
 
-const style_el = document.head.lastChild;
+const style_els = [...document.head.querySelectorAll('style')];
 
-style_el.parentNode.removeChild(style_el);
+const style_el = style_els.slice(-1)[0];
 
-const css_base_url = document.head.querySelector('[rel="css_base_url"]').href;
+const css_base_url = document.head.querySelector('[rel="css_base_url"]') ? document.head.querySelector('[rel="css_base_url"]').href : '/static';
 
 const COMPONENTS = {
   searchbox: SearchComponent
@@ -33,9 +33,14 @@ class SearchBox extends VueComponentElement {
     let inner_html = this.innerHTML;
     if ( inner_html.indexOf('searchbox') < 0) {
       this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}">${this.innerHTML}</searchbox>`;
+      if (ev) {
+        super.inputSlotChanged(ev);
+      }
       return;
     }
-    super.inputSlotChanged(ev);
+    if (ev) {
+      super.inputSlotChanged(ev);
+    }
   }
 
   connectedCallback() {

@@ -1,15 +1,15 @@
 <template>
 <form part="form" class="search" novalidate="novalidate" :data-loading="loading ? '' : false" v-focusfirst v-on:reset="search=''; $event.target.querySelector('#search').focus(); " @submit.prevent>
-  <header><input v-model="search" id="search" :autofocus="isroot" required type="search" placeholder="Gene or UniProt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" v-on:keydown="jumptoresults"/><button type="reset" v-on:click="search_results = false" /></header>
+  <header><input v-model="search" id="search" :autofocus="isroot" required type="search" placeholder="Gene or UniProt" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" v-on:keydown="jumptoresults"/><button type="reset" v-on:click="search_results = false" /><span v-if="speciesOverride && species != speciesOverride" style="z-index: 2; position: absolute; opacity: 0.2; right: 1.5em;">{{calculatedSpecies}}</span></header>
   <ul class="dropdown-menu">
     <template v-if="options.length < 1 && search_results && !search_dirty && search.length > 0">
       <div class="noresults">No results</div>
     </template>
     <li v-for="(option,itemidx) in options" v-on:click="focusItem($event, itemidx)" >
         <input type="radio" value="" name="search" :id="`search${itemidx}`" v-on:keydown="radiokey" v-on:change="fixTabOrders" v-on:focus="scrollIfNeeded" /><div class="d-center"><label :for="`search${itemidx}`">{{option.symbol}} <span class="alias">{{ option.matching_aliases }}</span></label>
-          <slot v-bind:option="option">
-<a v-if="option.geneid" part="button" class="glyco" :href="'/glymap/geneid/'+option.geneid+(option.search_snp?'?snp='+option.search_snp:'')">Gene</a>
-        <a v-if="option.prot" part="button" class="glyco quickaction" :href="'/glycodomain/'+option.prot">Protein</a>
+          <slot :option="option">
+<router-link v-if="option.geneid" part="button" class="glyco" :to="'/glymap/geneid/'+option.geneid+(option.search_snp?'?snp='+option.search_snp:'')">Gene</router-link>
+        <router-link v-if="option.prot" part="button" class="glyco quickaction" :to="'/glycodomain/'+option.prot">Protein</router-link>
           </slot>
         </div>
     </li>
@@ -108,6 +108,7 @@ export default {
   data () {
     return {
       search: null,
+      speciesOverride: null,
       loading: false,
       search_dirty: false,
       search_error: false,
@@ -138,6 +139,9 @@ export default {
     isroot: function() {
       return false;
       //return this.$route.path === '/';
+    },
+    calculatedSpecies: function() {
+      return this.speciesOverride || this.species;
     }
   },
   methods: {
@@ -175,8 +179,15 @@ export default {
       this.fixTabOrders();
     },
     performSearch: function(text) {
-      if (this.species) {
-        do_search.call(this,text,this.species);
+      if (text.length < 2) {
+        return;
+      }
+      if (text == 't' || text == 'ta' || text.indexOf('tax') == 0) {
+        this.speciesOverride = parseInt(text.split(':')[1]);
+        return;
+      }
+      if (this.calculatedSpecies) {
+        do_search.call(this,text,this.calculatedSpecies);
       } else {
         do_search.call(this,text);
       }
@@ -189,7 +200,6 @@ export default {
 form {
   display: block;
   border-radius: 5px;
-  min-width: 15em;
   position: relative;
   line-height: 1em;
   top: 0px;
@@ -199,6 +209,7 @@ form {
   border: solid black 1px;
   font-family: Verdana, Helvetica, sans-serif;
   overflow-y: scroll;
+  overflow-x: hidden;
   background: #fff;
 }
 
