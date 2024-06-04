@@ -78,7 +78,7 @@
 
 
     --base-color-darker: oklch(from var(--base-color) calc(l - 0.025) c h);
-    --base-color-darkest: oklch(from var(--base-color) calc(l - 0.075) c h);
+    --base-color-darkest: oklch(from var(--base-color) calc(l - 0.095) c h);
     --base-color-lighter: oklch(from var(--base-color) calc(l + 0.05) calc( c - 0.03)  h);
     --base-color-lightest: oklch(from var(--base-color) calc(l + 0.15) c h);
 
