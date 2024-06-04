@@ -32,7 +32,16 @@
 
 
 <style>
-header.pageheader section.logo {
-background-image: url({{ $logo }});
+header.pageheader section.logo:before {
+  content: '';
+  display: block;
+  background-color: var(--foreground-color);
+  mask: url({{ $logo }}) no-repeat 10px 4px/5em 100% exclude;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
 }
 </style>
