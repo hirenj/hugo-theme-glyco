@@ -76,7 +76,7 @@ header.pageheader section.logo a.center + span.user {
     margin-left: -10px;
   }
 
-  header.pageheader section.logo > a.home] {
+  header.pageheader section.logo > a.home {
     display: none;
   }
 
