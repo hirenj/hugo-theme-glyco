@@ -35,7 +35,7 @@ header.pageheader section.logo span.user {
   font-size: 0.75em;
   font-weight: lighter;
   font-style: oblique;
-  color: #fff;
+  color: var(--foreground-color);
   display: inline-block;
   bottom: 1em;
   max-width: 30%;
@@ -67,8 +67,8 @@ header.pageheader section.logo a.center + span.user {
     and (max-width: 480px)
     and (-webkit-min-device-pixel-ratio: 2) {
 
-  header.pageheader section.logo {
-    background-position-x: 1.5em;
+  header.pageheader section.logo:before {
+    mask-position: 2em 6px !important;
   }
 
 

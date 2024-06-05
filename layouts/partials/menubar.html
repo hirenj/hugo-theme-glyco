@@ -4,7 +4,13 @@
   <input id="mobiletoggle" type="checkbox">
   <label class="mobiletoggle" for="mobiletoggle"></label>
   <ul>
-    <li class="mobiletoggle"><label><a href="/" title="Home">Home</a></label></li>
+    <li class="mobiletoggle"><label>
+      {{ if isset .Site.Params "home_link_url" }}
+        <a class="home" title="Home" href="{{ .Site.Params.home_link_url }}">Home</a>
+     {{ else }}
+        <a class="home" title="Home" href="{{ "/" | relURL }}">Home</a>
+      {{ end }}
+    </label></li>
     <li class="mobiletoggle"><x-userstatus/></li>
       {{ $currentPage := . }}
       {{ partial "render_menu.html" . }}
