@@ -27,7 +27,7 @@ header.pageheader section.logo h1 {
   position: absolute;
   font-family: Verdana, sans-serif;
   align-self: flex-start;
-  margin-left: 7em;
+  margin-left: calc(var(--logo-width) + 2em);
 }
 
 header.pageheader section.logo span.user {
