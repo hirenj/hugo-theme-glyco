@@ -82,8 +82,8 @@ header.pageheader section.logo a.center + span.user {
 
   header.pageheader section.logo h1 {
     align-self: flex-start;
-    margin-left: calc( 3em + var(--logo-width) );
-    max-width: calc( 70% - 1*var(--logo-width) - 3em );
+    margin-left: calc( 3.5em + var(--logo-width) );
+    max-width: calc( 70% - 1*var(--logo-width) - 3.5em );
     top: calc( 1.35em + 0.1*1.2em );
     white-space: nowrap;
     text-overflow: ellipsis;
