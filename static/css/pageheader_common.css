@@ -23,7 +23,7 @@ header.pageheader section.logo h1 {
   font-style: oblique;
   color: var(--foreground-color);
   display: inline-block;
-  top: calc( 1.25em + 0.1*1.2em );
+  top: calc( 1.35em + 0.1*1.2em );
   position: absolute;
   font-family: Verdana, sans-serif;
   align-self: flex-start;
