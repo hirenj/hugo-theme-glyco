@@ -32,11 +32,18 @@
 
 
 <style>
+header.pageheader section.logo {
+    --logo-width: 5em;
+}
 header.pageheader section.logo:before {
   content: '';
   display: block;
   background-color: var(--foreground-color);
-  mask: url({{ $logo }}) no-repeat 10px 4px/5em 100% exclude;
+  mask-image: url({{ $logo }});
+  mask-repeat: no-repeat;
+  mask-position: 10px 4px;
+  mask-size: var(--logo-width) 100%;
+  mask-composite: exclude;
   position: absolute;
   top: 0;
   left: 0;

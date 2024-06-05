@@ -23,7 +23,7 @@ header.pageheader section.logo h1 {
   font-style: oblique;
   color: var(--foreground-color);
   display: inline-block;
-  top: calc( 1.35em + 0.1*1.2em );
+  top: calc( 1.20em + 0.1*1.2em );
   position: absolute;
   font-family: Verdana, sans-serif;
   align-self: flex-start;
@@ -82,13 +82,13 @@ header.pageheader section.logo a.center + span.user {
 
   header.pageheader section.logo h1 {
     align-self: flex-start;
-    margin-left: 8em;
-    max-width: calc( 70% - 8em );
+    margin-left: calc( 3em + var(--logo-width) );
+    max-width: calc( 70% - 1*var(--logo-width) - 3em );
+    top: calc( 1.35em + 0.1*1.2em );
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
   }
-
 }
 
 header.pageheader section.logo > a.home {
