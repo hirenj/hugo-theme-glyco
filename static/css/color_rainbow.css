@@ -1,0 +1,32 @@
+*[rainbow] {
+  animation-name: rainbow-base, rainbow-saturation, rainbow-lum;
+  animation-duration: 3s, 12s, 24s;
+  animation-iteration-count: infinite, infinite, infinite;
+}
+
+@keyframes rainbow-base {
+    100%,0%{
+      --base-hue: 0;
+    }
+    50%{
+      --base-hue: 180;
+    }
+}
+
+@keyframes rainbow-saturation {
+    100%,0%{
+      --base-saturation: 0;
+    }
+    50%{
+      --base-saturation: 100%;
+    }
+}
+
+@keyframes rainbow-lum {
+    100%,0%{
+      --base-lum: 40;
+    }
+    50%{
+      --base-lum: 80;
+    }
+}

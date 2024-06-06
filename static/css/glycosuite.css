@@ -1,67 +1,40 @@
+
+@property --base-color {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #000000;
+}
+
+@property --base-foreground {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #ffffff;
+}
+
+@property --base-hue {
+  syntax: '<number>';
+  inherits: true;
+  initial-value: 278.03;
+}
+
+@property --base-saturation {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 17.2%;
+}
+
+@property --base-lum {
+  syntax: '<percentage>';
+  inherits: true;
+  initial-value: 60.31%;
+}
+
 :root {
-  --base-hue: 233.5;
-  --base-saturation: 29.5%;
-  --base-lum: 59;
-  --should-invert-fg: 1;
+  --base-hue: 278.03;
+  --base-saturation: 17.2%;
+  --base-lum: 60.31%;
 
-/* GalNAc */
-
-/*
-  --base-hue: 50;
-  --base-saturation: 97%;
-  --base-lum: 75;
-  --should-invert-fg: 0;
-*/
-
-/* Mannose */
-
-/*
-  --base-hue: 149.3;
-  --base-saturation: 97%;
-  --base-lum: 57.5;
-  --should-invert-fg: 0;
-*/
-
-
-  /* Start stuff to be deprecated */
-
-  --base-foreground: hsl(var(--base-hue),100%,calc( 100% * var(--should-invert-fg)) );
-
-  --threshold: 70;
-
-  --switch: calc( (var(--base-lum) - var(--threshold)) * -100% );
-
-  --base-foreground: hsl(0,0%,var(--switch));
-
-  --base-lum-percent: calc( var(--base-lum) * 1% );
-
-  --darker-saturation: calc( var(--base-saturation) + 3% );
-  --darker-lum: calc( var(--base-lum-percent) - 25% );
-
-  --lighter-saturation: calc( var(--base-saturation) - 20% );
-  --ligher-lum: calc( var(--base-lum-percent) + 25% );
-
-
-  --base-color: hsl(var(--base-hue), var(--base-saturation), var(--base-lum-percent));
-
-
-  --base-color-darker: hsl(var(--base-hue),var(--darker-saturation),var(--base-lum-percent));
-  --base-color-darkest: hsl(var(--base-hue),var(--darker-saturation),var(--darker-lum));
-  --base-color-lighter: hsl(var(--base-hue),var(--lighter-saturation),var(--base-lum-percent));
-  --base-color-lightest: hsl(var(--base-hue),var(--lighter-saturation),var(--lighter-lum));
-
-
-  --main-border-color: hsl(var(--base-hue),calc( var(--base-saturation) + 50%),calc( var(--base-lum-percent) - 50% )); /* #33075e;*/
-  --inactive-main-border-color: hsl(var(--base-hue),var(--lighter-saturation),calc( var(--base-lum-percent) - 20% ));
-
-  --highlight-color: hsl(calc( var(--base-hue) - 120 ), var(--base-saturation), var(--base-lum-percent) ); /* #9fc89a  */
-  --error-color: hsl(calc( var(--base-hue) + 120 ), var(--base-saturation), var(--base-lum-percent) ); /* #c89a9f */
-
-
-  /*
-   End stuff to be deprecated
-  */
-
+  --base-color: oklch(var(--base-lum) var(--base-saturation) var(--base-hue));
 
   --main-color: var(--base-color);
   --inactive-main-color: var(--base-color-lighter);
@@ -70,8 +43,15 @@
   --darker-medium-main-color: var(--base-color-darker);
   --darker-main-color: var(--base-color-darkest);
 
-  @supports (color: oklch(from red l c h)) {
+  --foreground-color: var(--base-foreground);
 
+  --glyco-button-radius: 5px;
+
+}
+
+@supports (color: oklch(from red l c h)) {
+
+  :root {
 /*  --color-lighter: hsl(from var(--color) h s calc(l * 1.2));*/
 /*  --color-lighterer: oklch(from var(--color) calc(l + 0.2) c h);*/
 /*  --color-alpha-50: oklab(from var(--color) l a b / 50%);*/
@@ -83,7 +63,7 @@
     --base-color-lightest: oklch(from var(--base-color) calc(l + 0.15) c h);
 
     --main-border-color: oklch(from var(--base-color) calc(l - 0.2) c h);
-    --inactive-main-border-color: oklch(from var(--base-color) calc(l - 0.2) calc(c - 0.5) h);
+    --inactive-main-border-color: oklch(from var(--base-color) calc(l - 0.2) calc(c - 0.3) h);
 
     --highlight-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h - 120deg ) ); 
     --error-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h + 120deg ) );
@@ -94,10 +74,6 @@
     --base-foreground: oklch(from var(--base-color) var(--l) 0 h);
   }
 
-
-  --foreground-color: var(--base-foreground);
-
-  --glyco-button-radius: 5px;
 }
 
 button {
@@ -164,7 +140,14 @@ h3,h4,h3:before,h3:after,h4:before,h4:after {
   border-bottom-color: hsl(var(--base-hue),0%,calc( var(--base-lum-percent) + 0% ));;
   border-left-color: hsl(var(--base-hue),0%,calc( var(--base-lum-percent) + 0% ));;
   border-right-color: hsl(var(--base-hue),0%,calc( var(--base-lum-percent) + 0% ));;
+}
 
+@supports (color: oklch(from red l c h)) {
+  h3,h4,h3:before,h3:after,h4:before,h4:after {
+    border-bottom-color: oklch(from var(--base-color) l 0% h / 0.5);
+    border-left-color: oklch(from var(--base-color) l 0% h / 0.5);
+    border-right-color: oklch(from var(--base-color) l 0% h / 0.5);
+  }
 }
 
 button.glyco, button.glyco:after, a.glyco, a.glyco:after, .div.glyco.spacer:after {
@@ -180,6 +163,20 @@ button.glyco,a.glyco {
 button.glyco:after, a.glyco:after {
   box-shadow: calc( 1px + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) + 1px ) var(--button-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--button-shadow-alpha)) ;
 }
+
+@supports (color: oklch(from red l c h)) {
+  button.glyco,a.glyco {
+    --shadow-color: oklch(from var(--base-color) l c h / var(--button-shadow-alpha));
+    box-shadow: calc( -0.6em + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) + 1px ) var(--button-drop-shadow-size) var(--shadow-color);
+  }
+
+  button.glyco:after, a.glyco:after {
+    --shadow-color: oklch(from var(--base-color) l c h / var(--button-shadow-alpha));
+    box-shadow: calc( 1px + var(--button-drop-shadow-size)) calc( var(--button-drop-shadow-size) + 1px ) var(--button-drop-shadow-size) var(--shadow-color);
+  }
+}
+
+
 
 button.glyco {
     /* NOSELECT */
@@ -295,6 +292,12 @@ section.info_card {
   width:  100%;
 }
 
+@supports (color: oklch(from red l c h)) {
+  section.info_card {
+    box-shadow: calc( 1px + var(--info_card-drop-shadow-size)) calc( var(--info_card-drop-shadow-size) + 1px ) var(--info_card-drop-shadow-size) oklch(from var(--base-color) l c h / var(--info_card-shadow-alpha)) ;
+  }
+}
+
 section.info_card > * {
   margin-left:  1em;
   margin-right:  1em;
@@ -325,6 +328,30 @@ section.info_card h3 {
   margin-left: calc(0.5em + 3px);
   width: calc(100% - 1em - 3px);
 }
+
+section.action_card {
+  --action_card-drop-shadow-size: 3px;
+  --action_card-shadow-alpha: 0.3;
+
+  display: block;
+  box-shadow: calc( 1px + var(--action_card-drop-shadow-size)) calc( var(--action_card-drop-shadow-size) + 1px ) var(--action_card-drop-shadow-size) oklch(from var(--base-color) l c h / var(--action_card-shadow-alpha));
+  border: solid oklch(from var(--base-color) l 0% h / 0.5 ) 1px;
+  border-top-color: var(--main-border-color);
+  border-bottom-left-radius: 10px;
+  border-bottom-right-radius: 10px;
+  margin-left: 1em;
+}
+section.action_card > :not(h3) {
+  margin: 0.5em;
+}
+section.action_card > h3 {
+  margin-top: -1px;
+  margin-left: 0em;
+}
+section.action_card > h3:after {
+  border-top-right-radius: 0px;
+}
+
 
 
 .toasted-container .glycosuite.toasted {
