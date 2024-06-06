@@ -29,7 +29,7 @@
   initial-value: 60.31%;
 }
 
-:root {
+:root, [color-override] {
   --base-hue: 278.03;
   --base-saturation: 17.2%;
   --base-lum: 60.31%;
@@ -51,7 +51,7 @@
 
 @supports (color: oklch(from red l c h)) {
 
-  :root {
+  :root, [color-override] {
 /*  --color-lighter: hsl(from var(--color) h s calc(l * 1.2));*/
 /*  --color-lighterer: oklch(from var(--color) calc(l + 0.2) c h);*/
 /*  --color-alpha-50: oklab(from var(--color) l a b / 50%);*/
