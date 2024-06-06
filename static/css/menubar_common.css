@@ -354,6 +354,14 @@ section.menu > ul > li:not([class^="menuitem"]).mobiletoggle {
 
   section.menu > ul {
     flex-direction: column-reverse;
+  }
+
+  section.menu > input[type="checkbox"] ~ ul {
+    box-shadow: none;
+    transition: box-shadow 0.5s;
+  }
+
+  section.menu > input[type="checkbox"]:checked ~ ul {
     box-shadow: var(--menu-shadow-definition) var(--menu-box-shadow-color);
   }
 
