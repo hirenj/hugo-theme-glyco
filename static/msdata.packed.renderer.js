@@ -67,7 +67,7 @@ var guess_composition = function(composition) {
 	if (Array.isArray(composition)) {
 		composition = composition[0];
 	}
-	var comp_string = composition.replace(/\d+x/,'').toLowerCase();
+	var comp_string = composition.replace(/\d+x/g,'').toLowerCase();
 	let sugar;
 	if (comp_string == 'hexhexnac') {
 		sugar = '#sugarrendered_gal(b1-3)galnac';
@@ -115,7 +115,7 @@ var render_peptide = function(peptide) {
 	(peptide.sites || []).forEach(function renderSite(site_block) {
 		var site = site_block[0];
 		has_site = true;
-		var composition = site_block[1].replace(/\d+x/,'');
+		var composition = site_block[1].replace(/\d+x/g,'');
 		let is_sugar = true;
 		if (composition === "HexNAc") {
 			composition = 'galnac';
