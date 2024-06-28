@@ -81,7 +81,7 @@
     --base-color-lighter: hsl(var(--base-hue),var(--lighter-saturation),var(--base-lum));
     --base-color-lightest: hsl(var(--base-hue),var(--lighter-saturation),var(--lighter-lum));
 
-    --drop-shadow-color: hsla(var(--base-hue),var(--base-saturation),var(--base-lum),var(--shadow-alpha));
+    --drop-shadow-color: hsla(var(--base-hue),var(--base-saturation),var(--base-lum),var(--drop-shadow-alpha));
 
     --main-border-color: hsl(var(--base-hue),calc( var(--base-saturation) + 50%),calc( var(--base-lum) - 50% )); /* #33075e;*/
     --inactive-main-border-color: hsl(var(--base-hue),var(--lighter-saturation),calc( var(--base-lum) - 20% ));
