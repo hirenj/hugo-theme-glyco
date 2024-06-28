@@ -89,8 +89,7 @@
     --highlight-color: hsl(calc( var(--base-hue) - 120 ), var(--base-saturation), var(--base-lum) ); /* #9fc89a  */
     --error-color: hsl(calc( var(--base-hue) + 120 ), var(--base-saturation), var(--base-lum) ); /* #c89a9f */
 
-    --action-card-border: hsla(var(--base-hue),0,var(--base-lum),0.5);
-
+    --card-border: hsla(var(--base-hue), 0%, var(--base-lum),0.5);
   }
 }
 
@@ -122,7 +121,7 @@
 
     --drop-shadow-color: oklch(from var(--drop-shadow-color-base) l c h / calc( alpha * var(--drop-shadow-alpha) ) );
 
-    --action-card-border: oklch(from var(--base-color) l 0% h / 0.5 );
+    --card-border: oklch(from var(--base-color) l 0% h / 0.5 );
 
   }
 
@@ -319,7 +318,10 @@ section.info_card {
   --drop-shadow-size: 4px;
   --drop-shadow-alpha: 0.3;
   position: relative;
-  border-radius: 0px 0px 10px 10px;
+  border-radius: 2.5em 0px 10px 10px;
+  border: solid var(--card-border) 1px;
+  border-top: 0px;
+
   background:  rgba(250,250,250,255);
   /*filter: drop-shadow( calc( 1px + var(--info_card-drop-shadow-size)) calc( var(--info_card-drop-shadow-size) + 1px ) var(--info_card-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--info_card-shadow-alpha)));*/
   box-shadow: var(--drop-shadow-offset) var(--drop-shadow-offset) var(--drop-shadow-size) var(--drop-shadow-color) ;
@@ -367,7 +369,7 @@ section.action_card {
 
   display: block;
   box-shadow: var(--drop-shadow-offset) var(--drop-shadow-offset) var(--drop-shadow-size) var(--drop-shadow-color);
-  border: solid var(--action-card-border) 1px;
+  border: solid var(--card-border) 1px;
   border-top-color: var(--main-border-color);
   border-bottom-left-radius: 10px;
   border-bottom-right-radius: 10px;
