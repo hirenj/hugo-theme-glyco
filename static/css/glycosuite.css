@@ -48,6 +48,8 @@
   --drop-shadow-size: 2px;
   --drop-shadow-alpha: 1;
   --drop-shadow-offset: calc( var(--drop-shadow-size) + 1px );
+  --controls-shadow-alpha: 0.25;
+  --box-shadow-alpha: 0.15;
 
 }
 
@@ -81,7 +83,6 @@
     --base-color-lighter: hsl(var(--base-hue),var(--lighter-saturation),var(--base-lum));
     --base-color-lightest: hsl(var(--base-hue),var(--lighter-saturation),var(--lighter-lum));
 
-    --drop-shadow-color: hsla(var(--base-hue),var(--base-saturation),var(--base-lum),var(--drop-shadow-alpha));
 
     --main-border-color: hsl(var(--base-hue),calc( var(--base-saturation) + 50%),calc( var(--base-lum) - 50% )); /* #33075e;*/
     --inactive-main-border-color: hsl(var(--base-hue),var(--lighter-saturation),calc( var(--base-lum) - 20% ));
@@ -90,6 +91,10 @@
     --error-color: hsl(calc( var(--base-hue) + 120 ), var(--base-saturation), var(--base-lum) ); /* #c89a9f */
 
     --card-border: hsla(var(--base-hue), 0%, var(--base-lum),0.5);
+  }
+
+  * {
+    --drop-shadow-color: hsla(var(--base-hue),var(--base-saturation),var(--base-lum),var(--drop-shadow-alpha));    
   }
 }
 
@@ -119,10 +124,14 @@
     --drop-shadow-color-base: oklch(from var(--base-color) l calc( c - 0.02 ) h );
     --drop-shadow-alpha: 0.3;
 
-    --drop-shadow-color: oklch(from var(--drop-shadow-color-base) l c h / calc( alpha * var(--drop-shadow-alpha) ) );
-
     --card-border: oklch(from var(--base-color) l 0% h / 0.5 );
 
+  }
+
+  /* https://stackoverflow.com/questions/52015737/css-scoped-custom-property-ignored-when-used-to-calculate-variable-in-outer-scop */
+
+  * {
+    --drop-shadow-color: oklch(from var(--drop-shadow-color-base) l c h / calc( alpha * var(--drop-shadow-alpha) ) );
   }
 
 }
@@ -203,7 +212,7 @@ h3,h4,h3:before,h3:after,h4:before,h4:after {
 
 button.glyco, button.glyco:after, a.glyco, a.glyco:after, .div.glyco.spacer:after {
   --drop-shadow-size: 3px;
-  --drop-shadow-alpha: 0.3;
+  --drop-shadow-alpha: var(--controls-shadow-alpha);
   background: var(--darker-medium-main-color);
 }
 
@@ -316,7 +325,7 @@ section.datasources p .data_title {
 
 section.info_card {
   --drop-shadow-size: 4px;
-  --drop-shadow-alpha: 0.3;
+  --drop-shadow-alpha: var(--box-shadow-alpha);
   position: relative;
   border-radius: 2.5em 0px 10px 10px;
   border: solid var(--card-border) 1px;
