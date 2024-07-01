@@ -395,12 +395,6 @@ section.action_card > h3:after {
   border-top-right-radius: 0px;
 }
 
-.glyco.drop_shadow {
-  --drop-shadow-size: 2px;
-  --drop-shadow-alpha: 1;
-  filter: drop-shadow( var(--drop-shadow-offset) var(--drop-shadow-offset) var(--drop-shadow-size) var(--drop-shadow-color) ) ;
-}
-
 .toasted-container .glycosuite.toasted {
   font-family: 'Verdana', 'Helvetica', sans-serif;
   font-weight: bolder;

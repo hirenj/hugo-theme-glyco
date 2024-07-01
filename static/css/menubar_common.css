@@ -14,7 +14,7 @@ section.menu {
   --submenu-height: calc( var(--menu-font) * 1.25 + 6px + 1em);
   --menu-item-width: 155px;
   --menu-border-width: 1px;
-  --menu-box-shadow-color: rgba(70,70,70,0.2);
+  --menu-box-shadow-color: var(--drop-shadow-color);
   --menu-shadow-definition:  2px 3px 5px 1px;
   z-index: var(--header-z-index);
   /* NOSELECT */
