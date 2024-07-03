@@ -1,8 +1,11 @@
 {{ $hash := .Site.Data.webpack.hash }}
 {{ with .File }}
 	{{ $page_dir := path.Dir .Dir }}
+	{{ $s := newScratch }}
+	{{ $s.Set "page_dir" $page_dir }}
 	{{ if eq $page_dir "/" }}
       {{ $page_dir := "index" }}
+	  {{ $s.Set "page_dir" $page_dir }}
 	{{ else }}
 	  {{ $page_dir := replace $page_dir "/" "_" }}
 	  {{ $page_parents := split .Dir "/" }}
@@ -11,7 +14,7 @@
 	<script src="{{ $hash | printf "js/site/pages_%s_.%s.js" $page_parent | relURL }}"></script>
 	  {{ end }}
 	{{ end }}
-	{{ if fileExists ($hash | printf "static/js/site/pages_%s.%s.js" $page_dir) }}
-	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" $page_dir | relURL }}"></script>
+	{{ if fileExists ($hash | printf "static/js/site/pages_%s.%s.js" ($s.Get "page_dir" )) }}
+	<script src="{{ $hash | printf "./js/site/pages_%s.%s.js" ($s.Get "page_dir" ) | relURL }}"></script>
 	{{ end }}
 {{ end }}
