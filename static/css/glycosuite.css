@@ -124,10 +124,20 @@
     --drop-shadow-color-base: oklch(from var(--base-color) l calc( c - 0.02 ) h );
     --drop-shadow-alpha: 0.3;
 
-    --card-border: oklch(from var(--base-color) l 0% h / 0.5 );
+    --l-border-threshold: 0.4;
+
+    --l-border: clamp(0, (var(--l-border-threshold) / l - 1) * infinity, 1);
+
+/*
+  if lum high -> low lum, otherwise normal base-lum
+
+  l-border is 0 for high lum
+  l-border is 1 for low lum
+*/
+
+    --card-border: oklch(from var(--base-color) clamp(0, 0.75 + l * var(--l-border), 1) 0% h / 0.5 );
 
   }
-
   /* https://stackoverflow.com/questions/52015737/css-scoped-custom-property-ignored-when-used-to-calculate-variable-in-outer-scop */
 
   * {
