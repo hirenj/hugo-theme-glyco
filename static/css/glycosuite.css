@@ -113,8 +113,8 @@
     --main-border-color: oklch(from var(--base-color) calc(l - 0.2) c h);
     --inactive-main-border-color: oklch(from var(--base-color) calc(l - 0.2) calc(c - 0.3) h);
 
-    --highlight-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h - 120deg ) ); 
-    --error-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h + 120deg ) );
+    --highlight-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h - 120 ) ); 
+    --error-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h + 120 ) );
 
 
     --l-threshold: 0.7;    
@@ -133,6 +133,15 @@
 
   * {
     --drop-shadow-color: oklch(from var(--drop-shadow-color-base) l c h / calc( alpha * var(--drop-shadow-alpha) ) );
+  }
+
+}
+
+@supports (color: oklch(from red l c calc( h + 1deg ) )) {
+
+  :root, [color-override] {
+    --highlight-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h - 120deg ) ); 
+    --error-color: oklch(from var(--base-color) calc( l + 0.1 ) c calc( h + 120deg ) );
   }
 
 }
