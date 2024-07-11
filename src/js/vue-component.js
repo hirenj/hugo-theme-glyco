@@ -3,6 +3,14 @@
 
 import Vue from 'vue';
 
+let VUE_ROOT;
+
+const adoptRoot = (root) => {
+  VUE_ROOT = root;
+};
+
+export { adoptRoot };
+
 const COMPONENTS = {
 };
 
@@ -94,9 +102,17 @@ class VueComponentElement extends WrapHTML {
     for (let key of (this.getAttribute('props') || '').split(' ')) {
       default_data[key] = null;
     }
+
+    let router;
+
+    if (VUE_ROOT) {
+      router = VUE_ROOT.$router;
+    }
+
     this.vueroot = new Vue({
         el: parent,
         data: default_data,
+        router,
         components: this.components,
     });
     if ( ! this.querySelector('*[slot]')) {

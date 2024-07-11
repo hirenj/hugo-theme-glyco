@@ -20,6 +20,19 @@ tmpl.innerHTML = `
 </style>
 `;
 
+const wrap_children = function() {
+  let inner_html = this.innerHTML;
+  if ( inner_html !== '' && inner_html.indexOf('searchbox') < 0) {
+    if (inner_html.indexOf('template') < 0) {
+      inner_html = `<template v-slot:default="searchresults">${inner_html}</template>`;
+    }
+    this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}">${inner_html}</searchbox>`;
+    return;
+  } else if (inner_html.indexOf('searchbox') < 0) {
+    this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}"/>`;
+  }
+};
+
 class SearchBox extends VueComponentElement {
   get components() {
     return COMPONENTS;
@@ -30,14 +43,7 @@ class SearchBox extends VueComponentElement {
   }
 
   inputSlotChanged(ev) {
-    let inner_html = this.innerHTML;
-    if ( inner_html != '' && inner_html.indexOf('searchbox') < 0) {
-      if (inner_html.indexOf('template') < 0) {
-        inner_html = `<template v-slot:default="searchresults">${inner_html}</template>`;
-      }
-      this.innerHTML = `<searchbox v-bind:species="${this.getAttribute('species') || 9606}">${inner_html}</searchbox>`;
-      return;
-    }
+    wrap_children.call(this);
     if (ev) {
       super.inputSlotChanged(ev);
     }
@@ -50,6 +56,7 @@ class SearchBox extends VueComponentElement {
 
     this.style.display = 'block';
     this.shadowRoot.appendChild(tmpl.content.cloneNode(true));
+    wrap_children.call(this);
   }
 }
 
