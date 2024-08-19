@@ -86,6 +86,9 @@ var guess_composition = function(composition) {
 
 var composition_to_lookup = function(composition) {
 	let lookup = {};
+	if (! composition.match(/\d+x/)) {
+		composition = `1x${composition}`;
+	}
 	for (let item of composition.match(/(\d+x[A-Za-z]+)/g)) {
 		let [count,res,_] = item.split(/x(.*)/);
 		lookup[res] = +count;
@@ -133,6 +136,12 @@ var render_peptide = function(peptide) {
 			composition = 'galnac';
 			identified = true;
 		}
+
+		if (composition === "GalNAc") {
+			composition = 'galnac';
+			identified = true;
+		}
+
 		if (composition == 'GlcNAc') {
 			composition = 'glcnac';
 			identified = true;
