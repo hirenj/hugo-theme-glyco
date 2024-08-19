@@ -84,6 +84,15 @@ var guess_composition = function(composition) {
 	return { sugar , count : parseInt(composition.replace(/^(\d+)x.*/,"$1")) };
 };
 
+var composition_to_lookup = function(composition) {
+	let lookup = {};
+	for (let item of composition.match(/(\d+x[A-Za-z]+)/g)) {
+		let [count,res,_] = item.split(/x(.*)/);
+		lookup[res] = +count;
+	}
+	return lookup;
+}
+
 var seen_sites = {};
 
 var render_peptide = function(peptide) {
@@ -115,31 +124,70 @@ var render_peptide = function(peptide) {
 	(peptide.sites || []).forEach(function renderSite(site_block) {
 		var site = site_block[0];
 		has_site = true;
-		var composition = site_block[1].replace(/\d+x/g,'');
+		var composition = site_block[1].replace(/1x/g,'');
+
 		let is_sugar = true;
+		let identified = false;
+
 		if (composition === "HexNAc") {
 			composition = 'galnac';
+			identified = true;
 		}
 		if (composition == 'GlcNAc') {
 			composition = 'glcnac';
+			identified = true;
 		}
 		if (composition === "HexHexNAc") {
 			composition = 'gal(b1-3)galnac';
+			identified = true;
 		}
 		if (composition == 'HexHex') {
 			composition = 'man(a1-2)man';
+			identified = true;
 		}
 		if (composition === 'Hex') {
 			composition = 'man';
+			identified = true;
 		}
 
 		if (composition === 'Phospho') {
 			is_sugar = false;
 			composition = 'phospho';
+			identified = true;
 		}
 
 		if (composition.toLowerCase() == 'glcnac(b1-4)glcnac') {
 			composition = 'man(a1-3)[man(a1-6)]man(b1-4)glcnac(b1-4)glcnac';
+			identified = true;
+		}
+
+		if ( ! identified ) {
+			console.log(site_block[1]);
+			let lookup = composition_to_lookup(site_block[1]);
+			if (seq.charAt(site - 1) == 'N') {
+				if (((lookup['Hex'] - lookup['HexNAc']) > 1) && lookup['HexNAc'] >= 2) {
+					composition = 'man(a1-2)man(a1-3)[man(a1-3)[man(a1-6)]man(a1-6)]man(b1-4)glcnac(b1-4)glcnac'
+					identified = true;
+				}
+				if (((lookup['HexNAc'] >= lookup['Hex']) || (lookup['NeuAc'] + lookup['NeuGc']) > 0) && lookup['HexNAc'] >= 2) {
+					composition = 'glcnac(b1-2)man(a1-3)[man(a1-6)]man(b1-4)glcnac(b1-4)glcnac';
+					identified = true;
+				}
+			} else if (['S','T','Y'].indexOf(seq.charAt(site - 1)) >= 0) {
+				if (lookup['HexNAc'] >= 3) {
+					composition = 'glcnac(b1-3)[galnac(b1-6)]GalNAc';
+					identified = true;
+				}
+				if (lookup['HexNAc'] == 1 && lookup['Hex'] > 0) {
+					composition = 'gal(b1-3)galnac';
+					identified = true;
+				}
+				if (lookup['HexNAc'] == 2) {
+					composition = 'gal(b1-3)[glcnac(b1-6)]galnac';
+					identified = true;
+				}				
+			}
+			console.log(composition);
 		}
 
 		composition = composition.toLowerCase();
