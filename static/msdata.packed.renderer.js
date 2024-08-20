@@ -171,7 +171,6 @@ var render_peptide = function(peptide) {
 		}
 
 		if ( ! identified ) {
-			console.log(site_block[1]);
 			let lookup = composition_to_lookup(site_block[1]);
 			if (seq.charAt(site - 1) == 'N') {
 				if (((lookup['Hex'] - lookup['HexNAc']) > 1) && lookup['HexNAc'] >= 2) {
@@ -196,7 +195,6 @@ var render_peptide = function(peptide) {
 					identified = true;
 				}				
 			}
-			console.log(composition);
 		}
 
 		composition = composition.toLowerCase();
