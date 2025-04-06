@@ -11,7 +11,7 @@
         <a class="home" title="Home" href="{{ "/" | relURL }}">Home</a>
       {{ end }}
     </label></li>
-    <li class="mobiletoggle"><x-userstatus/></li>
+    <li class="mobiletoggle"><ccg-userstatus/></li>
       {{ $currentPage := . }}
       {{ partial "render_menu.html" . }}
       {{ $scratch := newScratch }}
@@ -30,8 +30,8 @@
       {{ if isset .Params "main_menu_search_species" }}
       {{ $scratch.Set "taxid" .Params.main_menu_search_species }}
       {{ end }}
-      <x-searchbox menu species='{{ $scratch.Get "taxid" }}' class="search">{{ partial "search_result_links.html" . }}
-</x-searchbox></label></li>
+      <ccg-searchbox menu species='{{ $scratch.Get "taxid" }}' class="search">{{ partial "search_result_links.html" . }}
+</ccg-searchbox></label></li>
       {{ end }}
   </ul>
 </section>

@@ -2,14 +2,14 @@
 {{ if (.Get 1) }}
   {{ $id := (.Get 1) }}
 {{ end }}
-<x-protviewer id="{{ $id }}" interactive >
-  <x-alignment src="{{ (.Get 0) | relURL }}">
+<ccg-protviewer id="{{ $id }}" interactive >
+  <ccg-alignment src="{{ (.Get 0) | relURL }}">
     <template>
-    <x-gatortrack name="uniprot" scale="uniprot" ></x-gatortrack>
-    <x-trackrenderer track="uniprot" renderer="{{ $id }}" offset="10" src="{{ "glycodomain.packed.renderer.js" | absLangURL }}">
-    </x-trackrenderer>
-    <x-trackrenderer track="uniprot" renderer="{{ $id }}" offset="-15" src="{{ "msdata.packed.renderer.js" | absLangURL }}">
-    </x-trackrenderer>
+    <ccg-gatortrack name="uniprot" scale="uniprot" ></ccg-gatortrack>
+    <ccg-trackrenderer track="uniprot" renderer="{{ $id }}" offset="10" src="{{ "glycodomain.packed.renderer.js" | absLangURL }}">
+    </ccg-trackrenderer>
+    <ccg-trackrenderer track="uniprot" renderer="{{ $id }}" offset="-15" src="{{ "msdata.packed.renderer.js" | absLangURL }}">
+    </ccg-trackrenderer>
     </template>
-  </x-alignment>
-</x-protviewer>
+  </ccg-alignment>
+</ccg-protviewer>

@@ -6,9 +6,9 @@ import { getData, retrieveUniprot } from './gator';
 
 async function loadDefaultData(value) {
   console.log('Default data loader',value);
-  if ( document.querySelector('x-trackrenderer[track="domains"]')) {
+  if ( document.querySelector('ccg-trackrenderer[track="domains"]')) {
     getData('glycodomain',value).then( dat => {
-      document.querySelector('x-trackrenderer[track="domains"]').data = dat._raw_data.data;
+      document.querySelector('ccg-trackrenderer[track="domains"]').data = dat._raw_data.data;
     });
 	} else {
     console.log('No renderer for Domains ([track="domains"]), skipping domains');
@@ -16,21 +16,21 @@ async function loadDefaultData(value) {
 
   let dat = await getData('combined',value);
 
-  if (document.querySelector('x-trackrenderer[src*="predictions"]')) {
+  if (document.querySelector('ccg-trackrenderer[src*="predictions"]')) {
     if (dat._raw_data.data['application/json+msdata-prediction']) {
-      document.querySelector('x-trackrenderer[src*="predictions"]').data = dat._raw_data.data['application/json+msdata-prediction'][0];
+      document.querySelector('ccg-trackrenderer[src*="predictions"]').data = dat._raw_data.data['application/json+msdata-prediction'][0];
     }
   } else {
     console.log('No renderer for predictions ([src*="predictions.renderer.js"]), skipping predictions');    
   }
 
-  if (document.querySelector('x-trackrenderer[src*="msdata.packed"]')) {
-    document.querySelector('x-trackrenderer[src*="msdata.packed"]').data = dat._raw_data.data;
+  if (document.querySelector('ccg-trackrenderer[src*="msdata.packed"]')) {
+    document.querySelector('ccg-trackrenderer[src*="msdata.packed"]').data = dat._raw_data.data;
   } else {
     console.log('No renderer for packed sites ([src*="msdata.packed"]), skipping sites');        
   }
 
-  for (const trackrenderer of [...document.querySelectorAll('x-js-trackrenderer[data-src]')]) {
+  for (const trackrenderer of [...document.querySelectorAll('ccg-js-trackrenderer[data-src]')]) {
     let data = await fetch(trackrenderer.getAttribute('data-src')).then( r => r.json() );
     if (data[value]) {
       trackrenderer.data = data[value];
@@ -43,8 +43,8 @@ async function loadDefaultData(value) {
 }
 
 let set_sequence = function(uniprot) {
-  let viewer = document.querySelector('x-summary-protviewer');
-  for (let track of document.querySelectorAll('x-gatortrack')) {
+  let viewer = document.querySelector('ccg-summary-protviewer');
+  for (let track of document.querySelectorAll('ccg-gatortrack')) {
     track.setAttribute('scale',uniprot);
   }
   let renderer = viewer.renderer;
@@ -58,7 +58,7 @@ let set_sequence = function(uniprot) {
     renderer.bind('sequenceChange',sequenceChanged);
   });
   retrieveUniprot(uniprot).then (async seq => {
-    let viewer = document.querySelector('x-summary-protviewer');
+    let viewer = document.querySelector('ccg-summary-protviewer');
     viewer.uniprot = uniprot;
     console.log(uniprot);
     viewer.renderer.setSequence(seq);

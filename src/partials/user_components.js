@@ -22,4 +22,4 @@ class UserStatus extends VueComponentElement {
   }
 }
 
-customElements.define('x-userstatus',UserStatus);
+customElements.define('ccg-userstatus',UserStatus);

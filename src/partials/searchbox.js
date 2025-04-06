@@ -60,4 +60,4 @@ class SearchBox extends VueComponentElement {
   }
 }
 
-customElements.define('x-searchbox',SearchBox);
+customElements.define('ccg-searchbox',SearchBox);

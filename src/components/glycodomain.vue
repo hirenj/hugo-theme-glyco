@@ -13,20 +13,20 @@
     <template slot="body">
     <section class="viewer">
       <glycorangeslider id="slider" :viewer="viewer" :animate-change="true" />
-      <x-summary-protviewer id="protview" interactive selecting>
-        <x-gatortrack name="ptms" fullname="Modifications" :scale="uniprot" ></x-gatortrack>
-        <x-gatortrack name="predictions" fullname="NetOGlyc4.0" :scale="uniprot" ></x-gatortrack>
-        <x-gatortrack name="domains" fullname="Domains" :scale="uniprot" ></x-gatortrack>
-        <x-gatortrack v-if="patterns.length > 0" name="patterns" fullname="Patterns" :scale="uniprot" ></x-gatortrack>
-      </x-summary-protviewer>
-      <x-trackrenderer track="domains" renderer="protview" src="/static/glycodomain.packed.renderer.js">
-      </x-trackrenderer>
-      <x-trackrenderer track="predictions" renderer="protview" src="/static/predictions.renderer.js">
-      </x-trackrenderer>
-      <x-trackrenderer track="ptms" renderer="protview" src="/static/msdata.packed.renderer.js">
-      </x-trackrenderer>
-      <x-trackrenderer track="patterns" renderer="protview" src="/static/patterns.packed.renderer.js">
-      </x-trackrenderer>
+      <ccg-summary-protviewer id="protview" interactive selecting>
+        <ccg-gatortrack name="ptms" fullname="Modifications" :scale="uniprot" ></ccg-gatortrack>
+        <ccg-gatortrack name="predictions" fullname="NetOGlyc4.0" :scale="uniprot" ></ccg-gatortrack>
+        <ccg-gatortrack name="domains" fullname="Domains" :scale="uniprot" ></ccg-gatortrack>
+        <ccg-gatortrack v-if="patterns.length > 0" name="patterns" fullname="Patterns" :scale="uniprot" ></ccg-gatortrack>
+      </ccg-summary-protviewer>
+      <ccg-trackrenderer track="domains" renderer="protview" src="/static/glycodomain.packed.renderer.js">
+      </ccg-trackrenderer>
+      <ccg-trackrenderer track="predictions" renderer="protview" src="/static/predictions.renderer.js">
+      </ccg-trackrenderer>
+      <ccg-trackrenderer track="ptms" renderer="protview" src="/static/msdata.packed.renderer.js">
+      </ccg-trackrenderer>
+      <ccg-trackrenderer track="patterns" renderer="protview" src="/static/patterns.packed.renderer.js">
+      </ccg-trackrenderer>
     </section>
     <section class="tooloptions">
       <tooloption slot="options" title="Match peptide pattern" id="patterns">
@@ -96,7 +96,7 @@ let retrieve_uniprot = function(uniprot) {
 
 let set_sequence = function(uniprot) {
   retrieve_uniprot(uniprot).then (seq => {
-    let viewer = this.$el.querySelector('x-summary-protviewer');
+    let viewer = this.$el.querySelector('ccg-summary-protviewer');
     viewer.uniprot = uniprot;
     viewer.renderer.setSequence(seq);
   });
@@ -105,16 +105,16 @@ let set_sequence = function(uniprot) {
 let load_data = async function(value) {
 
   getData('glycodomain',value).then( dat => {
-    this.$el.querySelector('x-trackrenderer[track="domains"]').data = dat._raw_data.data;
+    this.$el.querySelector('ccg-trackrenderer[track="domains"]').data = dat._raw_data.data;
   });
 
   let dat = await getData('combined',value);
 
   if (dat._raw_data.data['application/json+msdata-prediction']) {
-    this.$el.querySelector('x-trackrenderer[track="predictions"]').data = dat._raw_data.data['application/json+msdata-prediction'][0];
+    this.$el.querySelector('ccg-trackrenderer[track="predictions"]').data = dat._raw_data.data['application/json+msdata-prediction'][0];
   }
 
-  this.$el.querySelector('x-trackrenderer[track="ptms"]').data = dat._raw_data.data;
+  this.$el.querySelector('ccg-trackrenderer[track="ptms"]').data = dat._raw_data.data;
 
   this.$refs.datatable.setRange();
 
@@ -126,7 +126,7 @@ let load_data = async function(value) {
   [ apply_transformer.bind( null, msdata ),
     reduce_table.bind( null, DATA_TABLE_HASH_KEYS ),
     annotate_samples.bind( null, dat._raw_data.data['samples']),
-    annotate_peptides.bind( null, this.$el.querySelector('x-summary-protviewer').renderer.sequence)
+    annotate_peptides.bind( null, this.$el.querySelector('ccg-summary-protviewer').renderer.sequence)
   ].reduce( (curr,nextfunc) => nextfunc(curr), to_transform );
 
   this.msdata_table = table;
@@ -170,7 +170,7 @@ const meta_dragging = function(evt){
 };
 
 const reconnect_viewer = function() {
-    let viewer = this.$el.querySelector('x-summary-protviewer');
+    let viewer = this.$el.querySelector('ccg-summary-protviewer');
     if (wiring_map.get(viewer)) {
       return;
     }
@@ -212,8 +212,8 @@ const set_patterns = function(patterns) {
   clearTimeout(this.pattern_debounce);
   const DEBOUNCE_WAITING = 500;
   this.pattern_debounce = setTimeout(() => {
-    let patterns_track = this.$el.querySelector('x-trackrenderer[track="patterns"]');
-    let viewer = this.$el.querySelector('x-summary-protviewer');
+    let patterns_track = this.$el.querySelector('ccg-trackrenderer[track="patterns"]');
+    let viewer = this.$el.querySelector('ccg-summary-protviewer');
     patterns_track.data = null;
     if (patterns_track && this.patterns.length > 0) {
       patterns_track.data = this.patterns;
@@ -265,7 +265,7 @@ export default {
       writeExcel(this.msdata_table,'Peptides',`${this.symbol}_${this.uniprot}_proteomics.xlsx`);
     },
     setRange([start,end]) {
-      let viewer = this.$el.querySelector('x-summary-protviewer');
+      let viewer = this.$el.querySelector('ccg-summary-protviewer');
       if (start === end) {
         start = start - 10;
         end = end + 10;
@@ -336,7 +336,7 @@ section.viewer {
 
 }
 
-x-summary-protviewer {
+ccg-summary-protviewer {
   width: 80%;
   --selection-color: var(--base-color-darkest);
   --button-default-background-color: var(--main-color);
