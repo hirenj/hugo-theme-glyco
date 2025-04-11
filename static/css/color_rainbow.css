@@ -24,9 +24,9 @@
 
 @keyframes rainbow-lum {
     100%,0%{
-      --base-lum: 40;
+      --base-lum: 40%;
     }
     50%{
-      --base-lum: 80;
+      --base-lum: 80%;
     }
 }
