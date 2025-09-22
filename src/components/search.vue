@@ -8,8 +8,6 @@
     <li v-for="(option,itemidx) in options" v-on:click="focusItem($event, itemidx)" >
         <input type="radio" value="" name="search" :id="`search${itemidx}`" v-on:keydown="radiokey" v-on:change="fixTabOrders" v-on:focus="scrollIfNeeded" /><div class="d-center"><label :for="`search${itemidx}`">{{option.symbol}} <span class="alias">{{ option.matching_aliases }}</span></label>
           <slot :option="option">
-<router-link v-if="option.geneid" part="button" class="glyco" :to="'/glymap/geneid/'+option.geneid+(option.search_snp?'?snp='+option.search_snp:'')">Gene</router-link>
-        <router-link v-if="option.prot" part="button" class="glyco quickaction" :to="'/glycodomain/'+option.prot">Protein</router-link>
           </slot>
         </div>
     </li>

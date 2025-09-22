@@ -56,7 +56,6 @@ class SearchBox extends VueComponentElement {
 
     this.style.display = 'block';
     this.shadowRoot.appendChild(tmpl.content.cloneNode(true));
-    wrap_children.call(this);
   }
 }
 
