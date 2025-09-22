@@ -265,7 +265,7 @@ div.glyco.spacer {
 div.glyco.spacer:before, div.glyco.spacer:after {
   width:  0.3em;
   border-bottom-right-radius: 0px;
-  left:  0.15em;
+  left:  -0.3em;
 }
 
 
@@ -275,7 +275,9 @@ div.glyco.spacer:before {
   left: calc( 100% - 0.15em );
 }
 
-
+button[disabled].glyco, button[disabled].glyco:before, button[disabled].glyco:after {
+  background: var(--disabled-main-color);
+}
 
 h1,h2 {
   font-family: 'Verdana','Helvetica',sans-serif;
