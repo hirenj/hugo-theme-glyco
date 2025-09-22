@@ -11,6 +11,8 @@ const lookup_url = (val) => `https://mygene.info/v3/gene/${val}?fields=name,symb
 
 const ebi_proteins_api_url = (val) => `https://www.ebi.ac.uk/proteins/api/proteins/${val}`;
 
+const uniprot_proteins_api_url = (val) => `https://rest.uniprot.org/uniprotkb/${val}?fields=accession,protein_name,gene_primary,lineage_ids,organism_id,organism_name`;
+
 const get_uniprot_entry_url = (val) => `https://rest.uniprot.org/uniprotkb/${val}`;
 
 
@@ -46,7 +48,7 @@ const manageErrors = function(response) {
 
 const perform_lookup = (id) => fetch_json(lookup_url(id));
 
-const perform_protein_lookup = (id) => fetch_json(ebi_proteins_api_url(id));
+const perform_protein_lookup = (id) => fetch_json(uniprot_proteins_api_url(id));
 
 const perform_uniprot_lookup = (id) => fetch_json(get_uniprot_entry_url(id));
 
@@ -173,8 +175,8 @@ REGEXES.set(UNIPROT_NAME_ID,/^(\w{1,5})_(\w{1,5})$/);
 const PROTEIN_LOOKUP_CACHE = new Map();
 
 const lookup_protein = async (identifier) => {
-  let gene_val = r => r.gene[0]?.name?.value || r.gene[0]?.orfNames[0]?.value;
-  let entrez_val = r => +r.dbReferences?.filter( entry => entry.type == "GeneID" )[0]?.id;
+  let gene_val = r => r.genes[0]?.geneName?.value || r.genes[0]?.orfNames[0]?.value;
+  let entrez_val = r => +r.uniprotKBCrossReferences?.filter( entry => entry.database == "GeneID" )[0]?.id;
 
   let matched_ids = [];
   for (const [idtype,regex] of REGEXES.entries()) {
@@ -239,15 +241,15 @@ const lookup_protein = async (identifier) => {
   let protein_info = 
     { 
       identifier: identifier,
-      uniprotkb: proteins_api_result.accession,
-      desc: proteins_api_result.name,
-      protein: proteins_api_result.protein.recommendedName?.fullName.value || proteins_api_result.protein.submittedName[0]?.fullName.value,
-      symbol: proteins_api_result.gene ? gene_val(proteins_api_result) : null,
-      species: [ ...proteins_api_result.organism?.names.filter( ({type,value}) => type == 'common' ).map(({value}) => value ),
-                 ...proteins_api_result.organism?.names.filter( ({type,value}) => type == 'scientific' ).map(({value}) => value )
+      uniprotkb: proteins_api_result.primaryAccession,
+      desc: proteins_api_result.genes[0]?.geneName.value,
+      protein: proteins_api_result.proteinDescription.recommendedName?.fullName.value || proteins_api_result.proteinDescription.submittedName[0]?.fullName.value,
+      symbol: proteins_api_result.genes ? gene_val(proteins_api_result) : null,
+      species: [ proteins_api_result.organism.commonName,
+                 proteins_api_result.organism.scientificName
                ],
-      taxonomy: proteins_api_result.organism.taxonomy,
-      lineage: proteins_api_result.organism.lineage,
+      taxonomy: proteins_api_result.organism.taxonId,
+      lineage: proteins_api_result.organism.lineage.map( l => l.scientificName) ,
       entrez: entrez_val(proteins_api_result)
     } 
 
