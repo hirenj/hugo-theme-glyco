@@ -279,6 +279,15 @@ button[disabled].glyco, button[disabled].glyco:before, button[disabled].glyco:af
   background: var(--disabled-main-color);
 }
 
+:is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco) {
+  margin-left: 0px;
+}
+:is(a.glyco, button.glyco, div.glyco):has( + :is(a.glyco, button.glyco, div.glyco)):after,
+:is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco):before {
+  border-radius: 0px;
+}
+
+
 h1,h2 {
   font-family: 'Verdana','Helvetica',sans-serif;
   margin-left: 1em;
