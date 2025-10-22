@@ -128,7 +128,9 @@ var render_peptide = function(peptide) {
 
 
 	var has_site = false;
-	(peptide.sites || []).forEach(function renderSite(site_block) {
+	(peptide.sites || []).filter( block => {
+		block[0]
+	}).forEach(function renderSite(site_block) {
 		var site = site_block[0];
 		has_site = true;
 		var composition = site_block[1].replace(/1x/g,'');
