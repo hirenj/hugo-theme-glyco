@@ -65,7 +65,7 @@ intervals.sort(function(a,b) {
 
 var guess_composition = function(composition) {
 	if (Array.isArray(composition)) {
-		composition = composition[0];
+		composition = composition[0] || '';
 	}
 	var comp_string = composition.replace(/\d+x/g,'').toLowerCase();
 	let sugar;
@@ -106,7 +106,7 @@ var render_peptide = function(peptide) {
 
 	peptide_lines[peptide.acc].push(pep_line);
 
-	if ( ! peptide.sites || peptide.sites.length == 0) {
+	if ( ( ! peptide.sites || peptide.sites.length == 0 ) && peptide.composition) {
 		let { sugar, count } = guess_composition(peptide.composition);
 		var peptide_key = peptide.start + '-' + peptide.end + sugar;
 		if ( seen_sites[ peptide_key ] ) {
