@@ -106,6 +106,10 @@ var render_peptide = function(peptide) {
 
 	peptide_lines[peptide.acc].push(pep_line);
 
+	if ( (! peptide.sites) && (! peptide.composition) ) {
+		return;
+	}
+
 	if ( ( ! peptide.sites || peptide.sites.length == 0 ) && peptide.composition) {
 		let { sugar, count } = guess_composition(peptide.composition);
 		var peptide_key = peptide.start + '-' + peptide.end + sugar;
