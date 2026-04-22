@@ -417,7 +417,9 @@ section.action_card > h3:after {
 }
 
 fieldset.glyco {
-  --legend-height: 1.5em;
+  --legend-padding-v: 3px;
+  --legend-line-height: 1.2em;
+  --legend-height: calc(var(--legend-line-height) + 2 * var(--legend-padding-v));
   border-top: none;
   border-left: solid var(--card-border) 1px;
   border-right: solid var(--card-border) 1px;
@@ -428,60 +430,59 @@ fieldset.glyco {
   --l: clamp(0, (var(--l-threshold) / l - 1) * infinity, 1);
   --fieldset-foreground: oklch(from var(--fieldset-legend-main-color) var(--l) 0 h);
 
-
-
   & legend {
+    font-size: 0.8em;
     float: left;
-    margin-top: calc(-1 * var(--legend-height) - 0.4em );
+    margin-top: calc(-1.25 * var(--legend-height));
+    height: calc( 1em + 1px );
     white-space: nowrap;
     z-index: 1;
     border: solid var(--main-border-color);
     color: var(--fieldset-foreground);
-
-    border-width: 1px 0px 0px 0px;   /* top + bottom stripe only */
+    border-width: 1px 0px 1px 0px;
+    border-bottom-color: var(--card-border);
     margin-left: 0em;
     margin-right: 0em;
     width: 100%;
-    padding: 3px;
+    padding: var(--legend-padding-v) 3px;
+    /*line-height: var(--legend-line-height);*/
     font-weight: normal;
     font-family: 'Helvetica', 'Verdana', sans-serif;
     background: var(--fieldset-legend-main-color);
   }
 
-  /* Left angled end */
   & legend::before {
     display: block;
     position: absolute;
     content: ' ';
     width: 1em;
     left: 2px;
-    top: calc( -1 * var(--legend-height) - 1px);
+    top: calc(-1 * var(--legend-height));
     height: var(--legend-height);
     transform: skewX(-15deg);
     border-bottom-left-radius: 0px;
-    border-top-left-radius:    var(--glyco-button-radius, 5px);
+    border-top-left-radius: var(--glyco-button-radius, 5px);
     z-index: -1;
     border: solid var(--main-border-color);
-    border-width: 1px 0px 0px 1px;   /* top + left + bottom */
+    border-width: 1px 0px 0px 1px;
     background: var(--fieldset-legend-main-color);
   }
 
-  /* Right angled end */
   & legend::after {
     display: block;
     position: absolute;
     content: ' ';
     width: 1em;
-    top: calc( -1 * var(--legend-height) - 1px);
+    top: calc(-1 * var(--legend-height));
     height: var(--legend-height);
     left: calc(100% - 1em + 3px);
     transform: skewX(-15deg);
     border-bottom-right-radius: 0px;
-    border-top-right-radius:    var(--glyco-button-radius, 5px);
+    border-top-right-radius: var(--glyco-button-radius, 5px);
     z-index: -1;
     background: var(--fieldset-legend-main-color);
     border: solid var(--main-border-color);
-    border-width: 1px 1px 0px 0px;   /* top + right + bottom */
+    border-width: 1px 1px 0px 0px;
   }
 }
 
