@@ -1,0 +1,255 @@
+/* ── Landing page layout ────────────────────────────────────────────────────
+   Extracted from LandingPage.vue (scoped styles).
+   All rules are scoped under .landing-content to avoid collisions.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Custom property defaults — override on :root or .landing-content in the
+   consuming site's CSS to change the palette. */
+.landing-content {
+  --logon-background-color: hsl(var(--base-hue), var(--darker-saturation), 92.7%);
+  --innercontent-border-color: var(--inactive-main-border-color);
+
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+  z-index: 0;
+}
+
+@supports (color: oklch(from red l c h)) {
+  .landing-content {
+    --logon-background-color: oklch(from var(--base-color) calc(l + 0.35) calc(c - 0.05) h);
+    --innercontent-border-color: oklch(from var(--base-color) calc(l + 0.1) calc(c - 0.027) calc(h + 7));
+  }
+}
+
+@supports (color: oklch(from red l c calc(h + 1deg))) {
+  .landing-content {
+    --logon-background-color: oklch(from var(--base-color) calc(l + 0.35) calc(c - 0.05) h);
+    --innercontent-border-color: oklch(from var(--base-color) calc(l + 0.1) calc(c - 0.027) calc(h + 7deg));
+  }
+}
+
+/* ── Hero header ─────────────────────────────────────────────────────────── */
+
+.landing-content .flex_header,
+.landing-content .heroimg,
+.landing-content .heroimgfront {
+  --header-height: 7.5em;
+  --carbon-hue: calc(var(--base-hue) + 270);
+  --nitrogen-lightness: 60%;
+}
+
+.landing-content .flex_header {
+  height: var(--header-height);
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: left;
+}
+
+.landing-content .flex_header h1 {
+  order: 2;
+  color: oklch(from var(--base-color) l c calc(h + 270));
+  top: 4vw;
+  white-space: nowrap;
+  font-style: oblique;
+  text-align: right;
+  margin-left: 0;
+}
+
+@supports (color: oklch(from red l c calc(h + 1deg))) {
+  .landing-content .flex_header h1 {
+    color: oklch(from var(--base-color) l c calc(h + 270deg));
+  }
+}
+
+.landing-content h1 .tag {
+  font-size: 0.75em;
+  font-weight: normal;
+}
+
+/* ── Hero image ──────────────────────────────────────────────────────────── */
+
+.landing-content .heroimg,
+.landing-content .heroimgfront {
+  --extra-height: 6em;
+  flex-shrink: 0;
+  align-self: middle;
+  width: calc(2.25 * var(--header-height));
+  height: calc(var(--header-height) + var(--extra-height));
+}
+
+.landing-content .flex_header .heroimg {
+  order: 1;
+}
+
+.landing-content .heroimgfront {
+  position: absolute;
+  top: calc(-0.5 * var(--extra-height));
+  left: 0;
+}
+
+/* ── Logon panel ─────────────────────────────────────────────────────────── */
+
+.landing-content .logon {
+  order: 3;
+  position: relative;
+  font-family: Verdana, Helvetica, sans-serif;
+  color: #000;
+  font-weight: bolder;
+  background: var(--logon-background-color);
+  margin-left: auto;
+  padding-right: 3em;
+  height: 100%;
+  width: 20vw;
+  min-width: 5em;
+  transform: skewX(-15deg);
+  transform-origin: bottom right;
+}
+
+.landing-content .logon > * {
+  transform: skewX(15deg);
+}
+
+.landing-content .logon p {
+  display: inline-block;
+  position: absolute;
+  top: 1em;
+  bottom: 2.5em;
+  margin: 0;
+  left: 2em;
+  right: 2em;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.landing-content .logon .button_box {
+  position: absolute;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  right: 0;
+  margin-right: 1.5em;
+  max-width: 10em;
+  bottom: 1em;
+}
+
+/* ── Inner content ───────────────────────────────────────────────────────── */
+
+/*
+  Wide layout (default):
+
+    ┌──────────────────────┬────────────┐
+    │  .info_cards (grid)  │  .sidebar  │
+    ├──────────────────────┴────────────┤
+    │         .main_content             │
+    └───────────────────────────────────┘
+*/
+.landing-content .innercontent {
+  display: grid;
+  grid-template-columns: auto auto;
+  grid-template-areas:
+    "cards sidebar"
+    "main  main";
+  gap: 2em;
+  padding: 2em;
+  border-top: solid 1px var(--innercontent-border-color, #9c9cbe);
+}
+
+/* Info cards: 2-column grid, wraps to next row beyond 2 cards.
+   Fixed repeat(2) avoids the auto-fill/fit-content circular sizing problem. */
+.landing-content .innercontent .info_cards {
+  grid-area: cards;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(17em, max-content));
+  width: fit-content;
+  gap: 1em;
+}
+
+
+.landing-content .innercontent .sidebar {
+  grid-area: sidebar;
+}
+
+.landing-content .innercontent .main_content {
+  grid-area: main;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────── */
+
+@media only screen and (min-width: 320px) and (max-width: 600px) and (-webkit-min-device-pixel-ratio: 1) {
+  .landing-content .flex_header,
+  .landing-content .heroimg,
+  .landing-content .heroimgfront {
+    --header-height: 4em;
+  }
+
+  .landing-content .heroimg {
+    display: flex;
+  }
+
+  .landing-content .heroimgfront {
+    display: none;
+  }
+
+  .landing-content .flex_header {
+    height: auto;
+    flex-wrap: wrap;
+  }
+
+  .landing-content .logon {
+    height: 3em;
+    width: 80vw;
+  }
+
+  .landing-content .logon p {
+    position: relative;
+  }
+
+  .landing-content .logon p br {
+    display: none;
+  }
+
+  .landing-content .logon .button_box {
+    bottom: unset;
+    top: 1em;
+  }
+}
+
+@media only screen and (min-width: 320px) and (max-width: 480px) and (-webkit-min-device-pixel-ratio: 2) {
+  .landing-content .flex_header h1 {
+    font-size: 0;
+    margin-left: 12vw;
+  }
+
+  .landing-content .flex_header h1 .tag {
+    font-size: 5vw;
+    font-weight: bold;
+  }
+
+  .landing-content .logon {
+    display: none;
+  }
+
+  .landing-content .flex_header {
+    height: 18vw;
+  }
+
+  .landing-content .flex_header,
+  .landing-content .heroimg,
+  .landing-content .heroimgfront {
+    --header-height: 4em;
+  }
+
+  .landing-content .innercontent {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "cards"
+      "sidebar"
+      "main";
+  }
+}

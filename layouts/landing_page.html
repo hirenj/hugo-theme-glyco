@@ -1,0 +1,85 @@
+{{ define "main" }}
+{{/* ── Hero SVG ─────────────────────────────────────────────────────────────
+     The consuming site should place an SVG at assets/images/landing-hero.svg
+     (or override the path via front-matter: landing_hero_svg: "images/foo.svg").
+     The SVG is inlined so that CSS custom properties (--carbon-hue, etc.) work.
+*/}}
+{{ $heroSvgPath := .Params.landing_hero_svg | default "images/landing-hero.svg" }}
+{{ $heroSvg     := resources.Get $heroSvgPath }}
+
+{{/* ── Configurable text ───────────────────────────────────────────────────
+     Front-matter keys: landing_title, landing_tagline
+     Fallbacks:         site.Params.landing_tagline, then .Site.Title
+*/}}
+{{ $title   := .Params.landing_title   | default .Site.Title }}
+{{ $tagline := .Params.landing_tagline | default (.Site.Params.landing_tagline | default "") }}
+
+<link rel="stylesheet" href="{{ "css/landing_page.css" | relURL }}">
+
+<section class="landing-content">
+
+  <header class="flex_header">
+
+    <h1>{{ $title }}{{ with $tagline }}<br/><span class="tag">{{ . }}</span>{{ end }}</h1>
+
+    {{ with $heroSvg }}
+    <div class="heroimg" aria-hidden="true">{{ .Content | safeHTML }}</div>
+    {{ end }}
+
+    <section class="logon">
+      {{ if not .Site.Params.skip_authentication }}
+        {{/*
+          TODO: authentication UI — add login/logout controls here.
+          At this point .Site.Params.skip_authentication is false, meaning
+          authentication is enabled for this site.
+        */}}
+      {{ end }}
+    </section>
+
+  </header>
+
+  {{ with $heroSvg }}
+  <div class="heroimgfront" aria-hidden="true">{{ .Content | safeHTML }}</div>
+  {{ end }}
+
+  {{/* Accessing .Content here triggers shortcode execution, which populates
+       .Store with any {{% slot "name" %}} blocks defined in the content file.
+       Info cards and sidebar can also be defined as front matter arrays/strings
+       as a fallback when no slot is provided. */}}
+  {{ $_ := .Content }}
+
+  <section class="innercontent">
+
+    {{/* ── Info cards ──────────────────────────────────────────────────────
+         Define via {{% slot "info_cards" %}} ... {{% /slot %}} in the content file.
+    */}}
+    <section class="info_cards">
+      {{ .Store.Get "info_cards" | safeHTML }}
+    </section>
+
+    {{/* ── Sidebar ──────────────────────────────────────────────────────────
+         Preferred: {{% slot "sidebar" %}} ... {{% /slot %}} in the content file.
+         Fallback:  layouts/partials/landing_sidebar.html (empty by default).
+    */}}
+    <aside class="sidebar">
+      {{ with .Store.Get "sidebar" }}
+        {{ . | safeHTML }}
+      {{ else }}
+        {{ partial "landing_sidebar.html" . }}
+      {{ end }}
+    </aside>
+
+    {{/* ── Main content ─────────────────────────────────────────────────────
+         Any markdown in the content file that is NOT inside a {{% slot %}}
+         block appears here.
+    */}}
+    <article class="main_content">
+      {{ .Content }}
+    </article>
+
+  </section>
+
+</section>
+
+{{ partial "jspage_common.html" . }}
+{{ end }}

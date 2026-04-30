@@ -1,0 +1,16 @@
+{{/* slot — captures named content blocks from a content file into the page Store,
+     so that layouts can read them with .Store.Get "name".
+
+     Usage (in a content .md file):
+       {{% slot "sidebar" %}}
+       Markdown content here
+       {{% /slot %}}
+
+     In the layout:
+       {{ $_ := .Content }}   ← triggers shortcode execution
+       {{ .Store.Get "sidebar" | safeHTML }}
+
+     Use {{% %}} (percent) delimiters so inner content is markdownified.
+     Use {{< >}} (angle) delimiters if you want to pass raw HTML unchanged.
+*/}}
+{{- .Page.Store.Set (.Get 0) (.Inner | markdownify) -}}
