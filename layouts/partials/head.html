@@ -1,23 +1,47 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+    <meta name="view-transition" content="same-origin">
     <meta name="site-base-url" content="{{ .Site.BaseURL | replaceRE `^https?://[^/]+` `` | strings.TrimRight "/" }}">
 	<link href="{{ "./css/glycosuite.css" | relURL }}" rel="stylesheet" type="text/css">
 	<link href="{{ "./css/header.css" | relURL }}" rel="stylesheet" type="text/css">
 	<link href="{{ "./css/menubar.css" | relURL }}" rel="stylesheet" type="text/css">
 	<link href="{{ "./css/color_rainbow.css" | relURL }}" rel="stylesheet" type="text/css">
 
-	{{ if .Site.Data.webpack.hash }}
-	<script src="{{ .Site.Data.webpack.hash | printf "./js/runtime.%s.js" | relURL }}"></script>
-	<script src="{{ .Site.Data.webpack.hash | printf "./js/commons.%s.js" | relURL }}"></script>
-	{{ if fileExists (.Site.Data.webpack.hash | printf "static/js/vendor.%s.js") }}
-	<script src="{{ .Site.Data.webpack.hash | printf "./js/vendor.%s.js" | relURL }}"></script>
+	{{ $wp := .Site.Data.webpack }}
+	{{ if $wp }}
+	{{ $hash := $wp.hash }}
+	{{ if $hash }}
+	{{/* Legacy format: single hash, filenames constructed by interpolation */}}
+	<script src="{{ $hash | printf "./js/runtime.%s.js" | relURL }}"></script>
+	<script src="{{ $hash | printf "./js/commons.%s.js" | relURL }}"></script>
+	{{ if fileExists ($hash | printf "static/js/vendor.%s.js") }}
+	<script src="{{ $hash | printf "./js/vendor.%s.js" | relURL }}"></script>
 	{{ end }}
-	<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/common_bootstrap.%s.js" | relURL }}"></script>
+	<script src="{{ $hash | printf "./js/theme/common_bootstrap.%s.js" | relURL }}"></script>
+	{{ else }}
+	{{/* Manifest format: chunk name → filename map */}}
+	{{ with index $wp "runtime" }}
+	<link rel="modulepreload" href="{{ printf "js/%s" . | relURL }}">
+	<script src="{{ printf "./js/%s" . | relURL }}"></script>
+	{{ end }}
+	{{ with index $wp "commons" }}
+	<link rel="modulepreload" href="{{ printf "js/%s" . | relURL }}">
+	<script src="{{ printf "./js/%s" . | relURL }}"></script>
+	{{ end }}
+	{{ with index $wp "vendor" }}
+	<link rel="modulepreload" href="{{ printf "js/%s" . | relURL }}">
+	<script src="{{ printf "./js/%s" . | relURL }}"></script>
+	{{ end }}
+	{{ with index $wp "theme/common_bootstrap" }}
+	<link rel="modulepreload" href="{{ printf "js/%s" . | relURL }}">
+	<script src="{{ printf "./js/%s" . | relURL }}"></script>
+	{{ end }}
+	{{ end }}
 	{{ else }}
 		<script>
 			console.log(
-			  "%cNo hash set from webpack, make sure you are doing the webpack build",
+			  "%cNo webpack manifest found — run the Hugo webpack build first",
 			  "color: white; font-size: 20px; background-color: red;"
 			);
 		</script>
