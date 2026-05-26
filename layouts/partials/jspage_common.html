@@ -27,6 +27,10 @@
 {{ else }}
 {{/* Manifest format */}}
 {{ if .Params.jsentry }}
+{{ $cssKey := printf "site/%s.css" .Params.jsentry }}
+{{ with index $wp $cssKey }}
+<link rel="stylesheet" href="{{ printf "./%s" . | relURL }}">
+{{ end }}
 {{ $key := printf "site/%s" .Params.jsentry }}
 {{ with index $wp $key }}
 <script type="module" src="{{ printf "js/%s" . | relURL }}"></script>

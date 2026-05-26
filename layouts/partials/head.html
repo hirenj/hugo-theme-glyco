@@ -21,6 +21,12 @@
 	<script src="{{ $hash | printf "./js/theme/common_bootstrap.%s.js" | relURL }}"></script>
 	{{ else }}
 	{{/* Manifest format: chunk name → filename map */}}
+	{{ with index $wp "commons.css" }}
+	<link rel="stylesheet" href="{{ printf "./%s" . | relURL }}">
+	{{ end }}
+	{{ with index $wp "vendor.css" }}
+	<link rel="stylesheet" href="{{ printf "./%s" . | relURL }}">
+	{{ end }}
 	{{ with index $wp "runtime" }}
 	<link rel="modulepreload" href="{{ printf "js/%s" . | relURL }}">
 	<script src="{{ printf "./js/%s" . | relURL }}"></script>
