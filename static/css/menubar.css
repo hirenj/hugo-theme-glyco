@@ -1,22 +1,7 @@
 @import "menubar_common.css";
 
-section.menu x-searchbox::part(root) * {
-  --main-color: var(--main-color);
-  --foreground-color: var(--foreground-color);
-  --base-color-darkest: var(--base-color-darkest);
-  --main-border-color: var(--main-border-color);
-  --darker-medium-main-color: var(--darker-medium-main-color);
-  --darker-main-color: var(--darker-main-color);
-  --highlight-color: var(--highlight-color)
-  --error-color: var(--error-color)
-  --foreground-color: var(--foreground-color);
-}
-
-section.menu  x-searchbox::part(root) {
-  --dropdown-font-weight: lighter;
-}
-
-section.menu x-searchbox::part(form) {
+section.menu ccg-searchbox::part(form),
+section.menu ccg-search::part(form) {
   width: 15em;
   margin-right: 1em;
   --result-rows: 3;
@@ -32,27 +17,12 @@ section.menu x-searchbox::part(form) {
   and (max-width: 480px)
   and (-webkit-min-device-pixel-ratio: 2) {
 
-  section.menu x-searchbox::part(form) {
+  section.menu ccg-searchbox::part(form),
+  section.menu ccg-search::part(form) {
     min-height: 1.5em;
     margin-right: 0;
     top: 0;
-  }
-
-  section.menu x-searchbox::part(form) {
     width: calc( 100% - 2em );
   }
 
-}
-
-section.menu x-searchbox[menu]::part(button) {
-  box-shadow: none;
-  padding: 0px;
-}
-
-section.menu x-searchbox[menu]::part(button) {
-  margin-left: 0em;
-}
-
-section.menu x-searchbox[menu]::part(button):after, x-searchbox[menu]::part(button):before {
-  box-shadow: none;
 }

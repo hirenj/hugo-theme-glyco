@@ -1,5 +1,15 @@
-{{ if .Site.Data.webpack.hash }}
+{{ $wp := .Site.Data.webpack }}
+{{ if $wp }}
+{{ $hash := $wp.hash }}
+{{ if $hash }}
 {{ if .Site.Params.full_authentication }}
-	<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/partials_user_components.%s.js" | relURL }}"></script>
+<script src="{{ $hash | printf "./js/theme/partials_user_components.%s.js" | relURL }}"></script>
+{{ end }}
+{{ else }}
+{{ if .Site.Params.full_authentication }}
+{{ with index $wp "theme/partials_user_components" }}
+<script src="{{ printf "./js/%s" . | relURL }}"></script>
+{{ end }}
+{{ end }}
 {{ end }}
 {{ end }}

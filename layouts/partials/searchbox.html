@@ -1,3 +1,11 @@
-{{ if .Site.Data.webpack.hash }}
-<script src="{{ .Site.Data.webpack.hash | printf "./js/theme/partials_searchbox.%s.js" | relURL }}"></script>
+{{ $wp := .Site.Data.webpack }}
+{{ if $wp }}
+{{ $hash := $wp.hash }}
+{{ if $hash }}
+<script src="{{ $hash | printf "./js/theme/partials_searchbox.%s.js" | relURL }}"></script>
+{{ else }}
+{{ with index $wp "theme/partials_searchbox" }}
+<script src="{{ printf "./js/%s" . | relURL }}"></script>
+{{ end }}
+{{ end }}
 {{ end }}
