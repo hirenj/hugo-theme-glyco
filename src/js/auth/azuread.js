@@ -64,6 +64,7 @@ const acceptLogin = (token) => {
         loginStatusPromise = null;
         MASCP.GatorDataReader.ID_TOKEN = token;
         localStorage.setItem('userName',user['http://glycocode/userName']);
+        localStorage.setItem('lastUserName',user['http://glycocode/userName']);
         localStorage.setItem(TOKEN_KEY, token);
         localStorage.setItem('profile', JSON.stringify(user));
         resolve(true);
@@ -119,7 +120,7 @@ const isLoggedIn = function() {
 const tryLoggingIn = function() {
   return auth_object.then( webauth => {
     return new Promise( (resolve,reject) => {
-    webauth.popup.authorize({ connection: 'AzureADv2', login_hint : localStorage.userName ? localStorage.userName : 'abc123@ku.dk'}, (err, authResult) => {
+    webauth.popup.authorize({ connection: 'AzureADv2', login_hint : localStorage.userName || localStorage.lastUserName || 'abc123@ku.dk'}, (err, authResult) => {
       if (err) {
         reject(err);
         return;
@@ -168,4 +169,8 @@ const getLoginStatus = () => {
   return loginStatusPromise;
 };
 
-export { ensureApiLogin, getLoginStatus, tryLoggingIn, parseLogin }
+const getLastUserName = () => localStorage.getItem('lastUserName');
+
+const clearLastUser = () => localStorage.removeItem('lastUserName');
+
+export { ensureApiLogin, getLoginStatus, tryLoggingIn, parseLogin, getLastUserName, clearLastUser }

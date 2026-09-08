@@ -28,11 +28,7 @@
 
     <section class="logon">
       {{ if not .Site.Params.skip_authentication }}
-        {{/*
-          TODO: authentication UI — add login/logout controls here.
-          At this point .Site.Params.skip_authentication is false, meaning
-          authentication is enabled for this site.
-        */}}
+        <ccg-userstatus hero></ccg-userstatus>
       {{ end }}
     </section>
 
@@ -49,6 +45,17 @@
   {{ $_ := .Content }}
 
   <section class="innercontent">
+
+    <section class="content_header">
+
+    {{ with .Store.Get "content_header" }}
+      {{ . | safeHTML }}
+    {{ else }}
+      <!-- No content_header in slot -->
+    {{ end }}
+
+    </section>
+
 
     {{/* ── Info cards ──────────────────────────────────────────────────────
          Define via {{% slot "info_cards" %}} ... {{% /slot %}} in the content file.

@@ -1,6 +1,16 @@
 {{ define "main" }}
 {{ .Content }}
-{{ if .Site.Data.webpack.hash }}
-<script src="/js/theme/_default_login_callback.{{.Site.Data.webpack.hash}}.js"></script>
+{{ $wp := .Site.Data.webpack }}
+{{ if $wp }}
+{{ $hash := $wp.hash }}
+{{ if $hash }}
+{{/* Legacy format */}}
+<script src="{{ $hash | printf "/js/theme/_default_login_callback.%s.js" }}"></script>
+{{ else }}
+{{/* Manifest format */}}
+{{ with index $wp "theme/_default_login_callback" }}
+<script src="{{ printf "/js/%s" . | relURL }}"></script>
+{{ end }}
+{{ end }}
 {{ end }}
 {{ end }}
