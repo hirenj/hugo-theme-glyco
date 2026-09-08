@@ -135,11 +135,38 @@ const tryLoggingIn = function() {
   });
 };
 
+const POST_LOGIN_RETURN_TO_KEY = 'postLoginReturnTo';
+
+const tryLoggingInRedirect = function() {
+  console.log('[auth] tryLoggingInRedirect: redirecting to Auth0');
+  return auth_object.then( webauth => {
+    sessionStorage.setItem(POST_LOGIN_RETURN_TO_KEY, window.location.pathname);
+    webauth.authorize({ connection: 'AzureADv2', login_hint : localStorage.userName || localStorage.lastUserName || 'abc123@ku.dk'});
+  });
+};
+
 const parseLogin = function() {
   console.log('[auth] parseLogin: running on', window.location.href, 'opener present:', !!window.opener);
   return auth_object.then( webauth => {
-    console.log('[auth] parseLogin: calling webauth.popup.callback');
-    webauth.popup.callback({});
+    if (window.opener) {
+      console.log('[auth] parseLogin: calling webauth.popup.callback');
+      webauth.popup.callback({});
+      return;
+    }
+    console.log('[auth] parseLogin: no opener, parsing redirect hash');
+    const returnTo = sessionStorage.getItem(POST_LOGIN_RETURN_TO_KEY) || '/';
+    sessionStorage.removeItem(POST_LOGIN_RETURN_TO_KEY);
+    webauth.parseHash({}, (err, authResult) => {
+      console.log('[auth] parseLogin: parseHash result', { err, authResult });
+      if (err || !authResult) {
+        console.error('[auth] redirect login failed', err);
+        window.location = returnTo;
+        return;
+      }
+      acceptLogin(authResult.accessToken).then(() => {
+        window.location = returnTo;
+      });
+    });
   });
 };
 
@@ -179,4 +206,4 @@ const getLastUserName = () => localStorage.getItem('lastUserName');
 
 const clearLastUser = () => localStorage.removeItem('lastUserName');
 
-export { ensureApiLogin, getLoginStatus, tryLoggingIn, parseLogin, getLastUserName, clearLastUser }
+export { ensureApiLogin, getLoginStatus, tryLoggingIn, tryLoggingInRedirect, parseLogin, getLastUserName, clearLastUser }
