@@ -153,6 +153,7 @@
   display: grid;
   grid-template-columns: auto auto;
   grid-template-areas:
+    "content_header content_header"
     "cards sidebar"
     "main  main";
   gap: 2em;
@@ -168,6 +169,14 @@
   grid-template-columns: repeat(2, minmax(17em, max-content));
   width: fit-content;
   gap: 1em;
+}
+
+.landing-content .innercontent .content_header {
+  grid-area: content_header;
+  text-align: right;
+  & h1 {
+    margin: 0px;
+  }
 }
 
 
