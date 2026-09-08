@@ -54,9 +54,11 @@ const tryRenewingToken = function(token) {
 };
 
 const acceptLogin = (token) => {
+  console.log('[auth] acceptLogin: fetching userInfo for token');
   return auth_object.then( webauth => {
     return new Promise( (resolve,reject) => {
       webauth.client.userInfo(token, function(err, user) {
+        console.log('[auth] acceptLogin: userInfo callback fired', { err, user });
         if (err) {
           reject(err);
           return;
@@ -118,9 +120,11 @@ const isLoggedIn = function() {
 };
 
 const tryLoggingIn = function() {
+  console.log('[auth] tryLoggingIn: opening popup');
   return auth_object.then( webauth => {
     return new Promise( (resolve,reject) => {
     webauth.popup.authorize({ connection: 'AzureADv2', login_hint : localStorage.userName || localStorage.lastUserName || 'abc123@ku.dk'}, (err, authResult) => {
+      console.log('[auth] tryLoggingIn: popup.authorize callback fired', { err, authResult });
       if (err) {
         reject(err);
         return;
@@ -132,7 +136,9 @@ const tryLoggingIn = function() {
 };
 
 const parseLogin = function() {
+  console.log('[auth] parseLogin: running on', window.location.href, 'opener present:', !!window.opener);
   return auth_object.then( webauth => {
+    console.log('[auth] parseLogin: calling webauth.popup.callback');
     webauth.popup.callback({});
   });
 };

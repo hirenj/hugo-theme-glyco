@@ -171,11 +171,14 @@ class CCGUserStatus extends HTMLElement {
     _logout() {
         performLogout()
             .then(() => ensureApiLogin())
-            .then(() => _setUser('anonymous'));
+            .then(() => _setUser('anonymous'))
+            .catch(err => console.error('ccg-userstatus logout failed', err));
     }
 
     _login() {
-        tryLoggingIn().then(() => this._checkUser());
+        tryLoggingIn()
+            .then(() => this._checkUser())
+            .catch(err => console.error('ccg-userstatus login failed', err));
     }
 
     _loginAsAnother() {
