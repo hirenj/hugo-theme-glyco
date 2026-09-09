@@ -9,6 +9,15 @@ let _debounce = null;
 
 const tmpl = document.createElement('template');
 tmpl.innerHTML = `<style>
+/* Inherited text properties (text-transform, letter-spacing, etc.) cross the
+   shadow boundary like any other inherited CSS property. The menubar's
+   uppercase nav-label styling (section.menu > ul { text-transform: uppercase })
+   would otherwise leak into result labels and any slotted link text — reset
+   it here so this element renders consistently regardless of where it's used. */
+:host {
+    text-transform: none;
+}
+
 :host form {
     display: block;
     border-radius: 5px;
@@ -302,6 +311,13 @@ class CCGSearch extends HTMLElement {
 
         this._input.addEventListener('input', () => this._onInput());
         this._input.addEventListener('keydown', ev => this._onKeydown(ev));
+        // Only re-render on focus/blur when there are no options — that's
+        // the sole case this affects (showing/hiding "No results"). Doing
+        // this unconditionally would also fire on blur when the user tabs
+        // from the input into a result radio (still within this shadow
+        // root), rebuilding the list mid-navigation and losing focus.
+        this._input.addEventListener('focus', () => { if (this._options.length === 0) this._render(); });
+        this._input.addEventListener('blur', () => { if (this._options.length === 0) this._render(); });
         this._reset.addEventListener('click', () => {
             this._options = [];
             this._render();
@@ -378,7 +394,8 @@ class CCGSearch extends HTMLElement {
 
     _render() {
         this._list.innerHTML = '';
-        if (this._options.length === 0 && !this._searchDirty && this._input.value.length > 0) {
+        const focused = this.shadowRoot.activeElement === this._input;
+        if (this._options.length === 0 && !this._searchDirty && this._input.value.length > 0 && focused) {
             const div = document.createElement('div');
             div.className = 'noresults';
             div.textContent = 'No results';

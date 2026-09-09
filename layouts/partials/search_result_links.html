@@ -1,4 +1,2 @@
-<!-- <template v-slot:default="searchresults">
-	<a v-if="searchresults.option.geneid" part="button" class="glyco quickaction" :href="'https://www.ncbi.nlm.nih.gov/gene/'+searchresults.option.geneid">Entrez</a>
-	<a v-if="searchresults.option.prot" part="button" class="glyco quickaction" :href="'https://glyco.me/glycodomain/'+searchresults.option.prot">Protein</a>
-</template> -->
+<a data-prop="geneid" data-href="/glymap/geneid/{geneid}" class="glyco quickaction" part="button">GlyMap</a>
+<a data-prop="prot" data-href="/glycodomain/{prot}" class="glyco quickaction" part="button">Protein</a>

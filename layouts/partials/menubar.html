@@ -32,8 +32,7 @@
       {{ end }}
       <ccg-searchbox menu species='{{ $scratch.Get "taxid" }}' class="search">
         <template>
-          <a data-prop="geneid" data-href="/glymap/geneid/{geneid}" class="glyco quickaction" part="button">GlyMap</a>
-          <a data-prop="prot" data-href="/glycodomain/{prot}" class="glyco quickaction" part="button">Protein</a>
+          {{ partial "search_result_links.html" . }}
         </template>
       </ccg-searchbox></label></li>
       {{ end }}

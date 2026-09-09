@@ -1,5 +1,13 @@
 @import "menubar_common.css";
 
+/* Custom properties inherit into shadow DOM regardless of ::part(), so this
+   just needs to land on the host element — ccg-search.js's internal styles
+   read --dropdown-font-weight but nothing here was ever setting it. */
+section.menu ccg-searchbox,
+section.menu ccg-search {
+  --dropdown-font-weight: lighter;
+}
+
 section.menu ccg-searchbox::part(form),
 section.menu ccg-search::part(form) {
   width: 15em;
@@ -25,4 +33,21 @@ section.menu ccg-search::part(form) {
     width: calc( 100% - 2em );
   }
 
+}
+
+/* The per-result <a part="button"> links from search_result_links.html end
+   up inside ccg-search's shadow tree (they're cloned/imported there, not
+   just slotted) — ::part() is the only way to reach them from page CSS. */
+section.menu ccg-searchbox[menu]::part(button),
+section.menu ccg-search[menu]::part(button) {
+  padding: 0px;
+  margin-left: 0em;
+  box-shadow: none;
+}
+
+section.menu ccg-searchbox[menu]::part(button):after,
+section.menu ccg-searchbox[menu]::part(button):before,
+section.menu ccg-search[menu]::part(button):after,
+section.menu ccg-search[menu]::part(button):before {
+  box-shadow: none;
 }
