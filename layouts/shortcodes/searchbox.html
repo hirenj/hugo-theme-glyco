@@ -1,0 +1,17 @@
+{{/* searchbox — a <ccg-searchbox> wired up with the shared
+     search_result_links.html result-link template. Content .md files can't
+     call {{ partial }} directly (Goldmark doesn't evaluate template actions
+     in page content), so this is the supported way to embed the searchbox
+     there — mirrors the inline usage in menubar.html/menubar.html.
+
+     Usage: {{< searchbox >}}
+        or: {{< searchbox species="9606" class="search" >}}
+*/}}
+{{ $species := .Get "species" }}
+{{ $class := .Get "class" | default "search" }}
+{{ $style := .Get "style" }}
+<ccg-searchbox menu{{ with $species }} species="{{ . }}"{{ end }} class="{{ $class }}"{{ with $style }} style="{{ . | safeCSS }}"{{ end }}>
+  <template>
+    {{ partial "search_result_links.html" . }}
+  </template>
+</ccg-searchbox>

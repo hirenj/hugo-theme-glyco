@@ -12,9 +12,15 @@ function _setUser(user) {
     _user = user;
     if (user !== 'anonymous') {
         document.documentElement.style.setProperty('--base-hue', 170);
+        document.body.setAttribute('data-authenticated', '');
     } else {
         document.documentElement.style.removeProperty('--base-hue');
+        document.body.removeAttribute('data-authenticated');
     }
+    // render_menu.html marks private-menu items aria-hidden by default and
+    // leaves correcting that to whoever resolves auth state — that's us.
+    document.querySelectorAll('li.nav-private').forEach(li =>
+        li.setAttribute('aria-hidden', user === 'anonymous' ? 'true' : 'false'));
     for (const el of _instances) el._update();
 }
 

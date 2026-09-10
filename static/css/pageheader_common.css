@@ -73,8 +73,10 @@ header.pageheader section.logo a.center + span.user {
   }
 
 
+  /* menubar.html already shows a ccg-userstatus for narrow layouts (in its
+     mobiletoggle row) — don't show a second one here. */
   header.pageheader section.logo span.user {
-    margin-left: -10px;
+    display: none;
   }
 
   header.pageheader section.logo > a.home {

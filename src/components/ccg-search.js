@@ -20,18 +20,12 @@ tmpl.innerHTML = `<style>
 
 :host form {
     display: block;
-    border-radius: 5px;
     position: relative;
     line-height: 1em;
     top: 0px;
     left: 0px;
     --result-rows: 5;
-    max-height: calc( 1.5em + (var(--result-rows) * (2.2em + 20px)) );
-    border: solid black 1px;
     font-family: Verdana, Helvetica, sans-serif;
-    overflow-y: scroll;
-    overflow-x: hidden;
-    background: #fff;
 }
 
 :host([data-loading]) header:after {
@@ -117,6 +111,9 @@ header {
     width: calc(100% - 2px);
     height: calc( var(--menu-height) - 4px);
     background: #fff;
+    border-radius: 5px;
+    border: solid black 1px;
+    overflow: hidden;
     z-index: 2;
 }
 input[type=search] {
@@ -182,17 +179,37 @@ input[type=radio] {
     width: calc(100% - 2px);
     list-style-type: none;
     padding: 0px;
-    position: relative;
-    bottom: 0px;
-    top: 0px;
+    /* Taken out of flow so a growing result list overlays whatever follows
+       on the page instead of pushing it down — form now only ever
+       contributes its header's height to layout. */
+    position: absolute;
+    top: 100%;
+    left: 0px;
+    max-height: calc( var(--result-rows) * (2.2em + 20px) );
+    overflow-y: scroll;
+    overflow-x: hidden;
+    background: #fff;
+    border: solid black 1px;
+    border-top: 0px;
+    border-radius: 0 0 5px 5px;
+    box-shadow: 0 2px 6px rgba(0,0,0,.3);
+    z-index: 5;
 }
 
-form::-webkit-scrollbar {
+/* No results rendered yet (or the search is empty) — the list still exists
+   in the DOM at zero height, but its own border/shadow would otherwise
+   show up as a stray line under the input. */
+.dropdown-menu:empty {
+    border: none;
+    box-shadow: none;
+}
+
+.dropdown-menu::-webkit-scrollbar {
     -webkit-appearance: none;
     width: 6px;
 }
 
-form::-webkit-scrollbar-thumb {
+.dropdown-menu::-webkit-scrollbar-thumb {
     border-radius: 3px;
     background-color: rgba(0,0,0,.2);
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
@@ -467,15 +484,15 @@ class CCGSearch extends HTMLElement {
     }
 
     _scrollIfNeeded(radio) {
-        const form = this.shadowRoot.querySelector('form');
+        const list = this._list;
         const li = radio.closest('li');
         if (!li) return;
-        if ((li.offsetTop + 28) < form.scrollTop) {
-            form.scrollTop = 0;
+        if ((li.offsetTop + 28) < list.scrollTop) {
+            list.scrollTop = 0;
             return;
         }
-        if ((li.offsetTop + 28) >= (form.offsetHeight + form.scrollTop)) {
-            form.scrollTop = li.offsetTop;
+        if ((li.offsetTop + 28) >= (list.offsetHeight + list.scrollTop)) {
+            list.scrollTop = li.offsetTop;
         }
     }
 }

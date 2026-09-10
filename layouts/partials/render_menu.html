@@ -16,8 +16,10 @@
  * `nav-{menuName}`) instead of as a top-level sibling of `main`, and is
  * excluded from the top-level weight ordering below.
  *
- * `main` items keep their full dropdown support; non-main top-level items
- * render as plain links.
+ * A non-`main` top-level item with its own children (declared via `parent`
+ * within that same menu, e.g. private-menu "Datasets" > "My Data") renders
+ * its own dropdown too, same as a `main` item — just without the
+ * cross-menu grafting `main` supports.
  */}}
 
 {{ $allTop := slice }}
@@ -58,9 +60,9 @@
       <ul>
         {{ range $item.Children }}
           {{ if hasPrefix .URL ".." }}
-          <li><label><a href="{{ .URL | relURL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+          <li><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ else }}
-          <li><label><a href="{{ .URL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+          <li><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ end }}
         {{ end }}
         {{ range $extraChildren }}
@@ -72,8 +74,22 @@
     {{ end }}
   </li>
 {{ else }}
-  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}" aria-hidden="true">
-    <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}" aria-hidden="true" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+    {{ if $item.HasChildren }}
+      <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
+      <label for="menu{{$idx}}">{{ $item.Name }}</label>
+      <ul>
+        {{ range $item.Children }}
+          {{ if hasPrefix .URL ".." }}
+          <li><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          {{ else }}
+          <li><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          {{ end }}
+        {{ end }}
+      </ul>
+    {{ else }}
+      <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+    {{ end }}
   </li>
 {{ end }}
 {{ end }}
