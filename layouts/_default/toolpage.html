@@ -1,0 +1,6 @@
+{{/* toolpage — descends from jspage: same content rendering + webpack
+     entry wiring (via jspage_content.html), plus a "toolpage" class for
+     tool-page-specific chrome (margin, etc. — see toolpage.css). */}}
+{{ define "main" }}
+{{ partial "jspage_content.html" (dict "page" . "class" "toolpage") }}
+{{ end }}

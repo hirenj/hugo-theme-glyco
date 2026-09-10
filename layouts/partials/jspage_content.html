@@ -1,0 +1,12 @@
+{{/* jspage_content — shared body for the jspage layout and anything that
+     descends from it (e.g. toolpage.html): renders the page content inside
+     a <section class="jspage [extra]"> and wires up the page's webpack
+     entry via jspage_common.html.
+
+     Call with a dict: {"page": ., "class": "extra-class-or-empty-string"} */}}
+{{ $page := .page }}
+<section class="jspage{{ with .class }} {{ . }}{{ end }}">
+{{ $page.Content }}
+</section>
+
+{{ partial "jspage_common.html" $page }}
