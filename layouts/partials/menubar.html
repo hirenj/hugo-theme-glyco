@@ -13,7 +13,6 @@
     </label></li>
     <li class="mobiletoggle"><ccg-userstatus/></li>
       {{ $currentPage := . }}
-      {{ partial "render_menu.html" . }}
       {{ $scratch := newScratch }}
 
       {{ if isset .Site.Params "main_menu_search" }}
@@ -36,5 +35,8 @@
         </template>
       </ccg-searchbox></label></li>
       {{ end }}
+
+      {{ partial "render_menu.html" . }}
+
   </ul>
 </section>

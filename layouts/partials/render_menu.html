@@ -1,19 +1,79 @@
-      {{ range $idx, $item := .Site.Menus.main.Reverse }}
-      <li class="menuitem{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
-        {{ if .HasChildren }}
-          <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
-          <label for="menu{{$idx}}">{{ $item.Name }}</label>
-          <ul>
-            {{ range .Children }}
-              {{ if hasPrefix .URL ".." }}
-              <li><label><a href="{{ .URL | relURL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
-              {{ else }}
-              <li><label><a href="{{ .URL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
-              {{ end }}
-            {{ end }}
-          </ul>
-        {{ else }}
-          <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+{{/* render_menu.html — merges all site menus into one nav tree, ordered by
+ * weight across menus (not just within `main`).
+ *
+ * Every menu other than `main` is rendered as extra top-level <li>s,
+ * interleaved with `main` by weight, and tagged with a `nav-{menuName}` class
+ * (plus `menuitem-{menuName}{idx}`) so a site's own CSS/JS can show or hide a
+ * whole menu by name — e.g. a menu that should only be visible in some
+ * context (installed PWA, logged-in users, etc). This partial itself renders
+ * those items `aria-hidden="true"` by default; a site that reveals them
+ * conditionally is responsible for correcting `aria-hidden` at runtime once
+ * it knows which state applies.
+ *
+ * A non-`main` menu item can instead be grafted as a *child* of a specific
+ * `main` item by setting `params.parentId` in its menu config to that main
+ * item's identifier — it then renders inside that item's dropdown (tagged
+ * `nav-{menuName}`) instead of as a top-level sibling of `main`, and is
+ * excluded from the top-level weight ordering below.
+ *
+ * `main` items keep their full dropdown support; non-main top-level items
+ * render as plain links.
+ */}}
+
+{{ $allTop := slice }}
+{{ range $menuName, $menuItems := .Site.Menus }}
+  {{ range $menuItems }}
+    {{ $parentId := index .Params "parentId" | default "" }}
+    {{ if and (ne $menuName "main") $parentId }}
+      {{/* grafted as a child of a main item instead — see below */}}
+    {{ else }}
+      {{ $allTop = $allTop | append (dict "item" . "menu" $menuName "weight" .Weight) }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{/* Sorted descending because the enclosing flexbox is row-reverse: DOM order
+     is the mirror image of on-screen (left-to-right, ascending weight) order. */}}
+{{ $allTop = sort $allTop "weight" "desc" }}
+
+{{ range $idx, $entry := $allTop }}
+{{ $item := $entry.item }}
+{{ if eq $entry.menu "main" }}
+  {{/* Collect children grafted in from other menus via params.parentId.
+       Each entry is a dict with the item and its source menu name so the
+       child <li> can carry the right nav-{menuName} class. */}}
+  {{ $extraChildren := slice }}
+  {{ range $menuName, $menuItems := $.Site.Menus }}
+    {{ if ne $menuName "main" }}
+      {{ range $menuItems }}
+        {{ if eq (index .Params "parentId" | default "") $item.Identifier }}
+          {{ $extraChildren = $extraChildren | append (dict "item" . "menu" $menuName) }}
         {{ end }}
-      </li>
       {{ end }}
+    {{ end }}
+  {{ end }}
+  <li class="nav-main menuitem-main{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+    {{ if or $item.HasChildren $extraChildren }}
+      <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
+      <label for="menu{{$idx}}">{{ $item.Name }}</label>
+      <ul>
+        {{ range $item.Children }}
+          {{ if hasPrefix .URL ".." }}
+          <li><label><a href="{{ .URL | relURL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+          {{ else }}
+          <li><label><a href="{{ .URL }}" title="{{ $item.Title }}">{{ .Name }}</a></label></li>
+          {{ end }}
+        {{ end }}
+        {{ range $extraChildren }}
+          <li class="nav-{{ .menu }}"><label><a href="{{ .item.URL }}" title="{{ .item.Title }}">{{ .item.Name }}</a></label></li>
+        {{ end }}
+      </ul>
+    {{ else }}
+      <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+    {{ end }}
+  </li>
+{{ else }}
+  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}" aria-hidden="true">
+    <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
+  </li>
+{{ end }}
+{{ end }}
