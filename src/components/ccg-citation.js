@@ -66,12 +66,18 @@ class CCGCitation extends HTMLElement {
         if (newVal !== oldVal) this._populate(newVal);
     }
 
+    // The raw Crossref response this element rendered from — select the
+    // element in devtools and read `$0.citation` to inspect it.
+    get citation() { return this._cite || null; }
+
     _populate(doi) {
         if (!doi) return;
+        this._cite = null;
         this._loading.hidden = false;
         this._link.hidden = true;
         this._unavailable.hidden = true;
         get_citation(doi).then(cite => {
+            this._cite = cite;
             this._loading.hidden = true;
             if (cite) {
                 this._link.href = `https://doi.org/${cite.DOI}`;
@@ -83,7 +89,7 @@ class CCGCitation extends HTMLElement {
                 this._link.appendChild(em);
                 this._link.append(' ');
                 const journal = document.createElement('span');
-                journal.innerHTML = cite['short-container-title'][0];
+                journal.innerHTML = cite['short-container-title']?.[0] || cite['container-title']?.[0] || '';
                 this._link.appendChild(journal);
                 this._link.append(` ${cite.issued['date-parts'][0][0]}`);
                 this._link.hidden = false;

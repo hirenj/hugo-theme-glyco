@@ -24,18 +24,18 @@ function normalizeProteinResult(result) {
 const tmpl = document.createElement('template');
 tmpl.innerHTML = `
 <style>
-    :host { display: inline-block; font-size: 10pt; font-family: 'Helvetica','Verdana',sans-serif; width: 100%; }
+    :host { display: inline-block; font: inherit; width: 100%; }
     .protein_info_block { display: flex; flex-direction: row; align-items: center; gap: 0.25em; height: 100%; }
     .symbol { font-weight: bolder; width: 15%; overflow-x: auto; display: inline-block; }
     .protein_name { flex-grow: 1; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
-    .taxinfo { font-size: 0.75em; display: flex; flex-direction: column; width: 8em; }
+    .taxinfo { font-size: 0.75em; display: flex; flex-direction: column; max-width: 8em; }
     .taxinfo > span:first-child { font-weight: bolder; }
     .taxinfo > * { text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
 </style>
 <span class="protein_info_block" hidden>
-    <span class="symbol"></span>
-    <span class="protein_name"></span>
-    <span class="taxinfo">
+    <span class="symbol" part="symbol"></span>
+    <span class="protein_name" part="protein_name"></span>
+    <span class="taxinfo" part="taxonomy">
         <span class="species"></span>
         <span class="lineage"></span>
     </span>

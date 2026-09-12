@@ -65,7 +65,7 @@ intervals.sort(function(a,b) {
 
 var guess_composition = function(composition) {
 	if (Array.isArray(composition)) {
-		composition = composition[0] || '';
+		composition = composition[0];
 	}
 	var comp_string = composition.replace(/\d+x/g,'').toLowerCase();
 	let sugar;
@@ -121,11 +121,7 @@ var render_peptide = function(peptide) {
 
 	peptide_lines[peptide.acc].push(pep_line);
 
-	if ( (! peptide.sites) && (! peptide.composition) ) {
-		return;
-	}
-
-	if ( ( ! peptide.sites || peptide.sites.length == 0 ) && peptide.composition) {
+	if ( ! peptide.sites || peptide.sites.length == 0) {
 		let { sugar, count } = guess_composition(peptide.composition);
 		var peptide_key = peptide.start + '-' + peptide.end + sugar;
 		if ( seen_sites[ peptide_key ] ) {
@@ -143,7 +139,7 @@ var render_peptide = function(peptide) {
 
 
 	var has_site = false;
-	(peptide.sites || []).filter( block => block[0] ).forEach(function renderSite(site_block) {
+	(peptide.sites || []).forEach(function renderSite(site_block) {
 		var site = site_block[0];
 		has_site = true;
 		var composition = site_block[1].replace(/1x/g,'');
