@@ -333,16 +333,9 @@ a[target='_blank'].glyco span:before, button[target='_blank'].glyco span:before 
   top: -2px;
 }
 
-section.datasources p {
-  font-family: Arial, Verdana;
-  font-size: 10pt;
-  margin-left: 1em;
-}
-
-section.datasources p .data_title {
-  font-style: italic;
-  color: #aaa;
-}
+/* section.datasources moved to glycome.css - it's a glycome-specific
+   concept (dataset provenance captions on glycome's tool pages), not a
+   generic theme one. */
 
 section.info_card {
   --drop-shadow-size: 4px;

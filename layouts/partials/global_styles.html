@@ -1,5 +1,20 @@
 <style>
 :root {
+  /* Opt-in default: page-level stylesheets apply this to their own
+     top-level wrapper (e.g. toolpage.css's section.jspage.toolpage,
+     landing_page.css's .landing-content) rather than it being forced
+     globally here - so any layout can choose to use it, or not. */
+  --site-font-family: Helvetica, Verdana, sans-serif;
 
+  /* Shared by the site's smaller/secondary text - datasource captions,
+     subtitles, filter toggles, taxonomy info, etc. - so they stay
+     consistent instead of each picking its own ad-hoc size/face. */
+  --label-font-family: var(--site-font-family);
+  --label-font-size: 0.8em;
+
+  /* Data tables (ccg-result-table, used by both ccg-variant-table and
+     ccg-msdata-table) — set once here rather than per table instance. */
+  --data-table-font-family: Helvetica, Verdana, Arial, sans-serif;
+  --data-table-font-size: 11pt;
 }
 </style>

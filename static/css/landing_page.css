@@ -9,6 +9,7 @@
   --logon-background-color: hsl(var(--base-hue), var(--darker-saturation), 92.7%);
   --innercontent-border-color: var(--inactive-main-border-color);
 
+  font-family: var(--site-font-family);
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -161,12 +162,23 @@
   border-top: solid 1px var(--innercontent-border-color, #9c9cbe);
 }
 
-/* Info cards: 2-column grid, wraps to next row beyond 2 cards.
-   Fixed repeat(2) avoids the auto-fill/fit-content circular sizing problem. */
+/* Info cards: 2-column grid, wraps to next row beyond 2 cards (unchanged
+   layout). minmax(_, 1fr) on both columns AND rows - with an intrinsically-
+   sized (fit-content) container - makes every column/row resolve to the
+   same size: the size the most content-full card needs (fr tracks under
+   intrinsic sizing all resolve to the largest track's requirement, since
+   they share the same flex factor). That replaces the old repeat(2, ...
+   max-content), where each column/row sized independently.
+   align-self:start stops .info_cards itself from being stretched by
+   .innercontent's own default align-items:stretch - without it, any extra
+   height .innercontent has available (e.g. from .landing-content's flex:1
+   filling the viewport) gets pushed down into every card. */
 .landing-content .innercontent .info_cards {
   grid-area: cards;
   display: grid;
-  grid-template-columns: repeat(2, minmax(17em, max-content));
+  grid-template-columns: repeat(2, minmax(17em, 1fr));
+  grid-template-rows: repeat(2, minmax(min-content, 1fr));
+  align-self: start;
   width: fit-content;
   gap: 1em;
 }
