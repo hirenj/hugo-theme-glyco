@@ -20,6 +20,20 @@
  * within that same menu, e.g. private-menu "Datasets" > "My Data") renders
  * its own dropdown too, same as a `main` item — just without the
  * cross-menu grafting `main` supports.
+ *
+ * Sites under the same deployment (separately built/deployed Hugo sites,
+ * e.g. multiple apps sharing one domain) can also opt into a generic
+ * "apps" menu of entrypoint links to each other: if a site's `data/apps.json`
+ * provides `.Site.Data.apps` as a list of `{id, name, path, weight, parent}`,
+ * one link per entry is synthesized here (menu name "apps"), skipping
+ * whichever entry's `id` matches the site's own `Site.Params.app_id`. A
+ * negative `weight` hides that entry on every site entirely (e.g. an app
+ * not yet deployed) rather than just sorting it. An entry's optional
+ * `parent` works exactly like the cross-menu `params.parentId` above — it
+ * names a `main` item's identifier to graft this entry's link into that
+ * item's dropdown instead of rendering it as a flat top-level link. This
+ * partial has no knowledge of what apps exist — only of this generic data
+ * shape.
  */}}
 
 {{ $allTop := slice }}
@@ -30,6 +44,20 @@
       {{/* grafted as a child of a main item instead — see below */}}
     {{ else }}
       {{ $allTop = $allTop | append (dict "item" . "menu" $menuName "weight" .Weight) }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ $selfAppId := .Site.Params.app_id | default "" }}
+{{ $appChildren := slice }}
+{{ range $app := .Site.Data.apps }}
+  {{ $appWeight := $app.weight | default 0 }}
+  {{ if and (ne $app.id $selfAppId) (ge $appWeight 0) }}
+    {{ $appItem := dict "Identifier" $app.id "Name" $app.name "Title" $app.name "URL" $app.path "Weight" $appWeight "HasChildren" false "Children" slice "Params" dict }}
+    {{ $appParent := $app.parent | default "" }}
+    {{ if $appParent }}
+      {{ $appChildren = $appChildren | append (dict "item" $appItem "menu" "apps" "parentId" $appParent) }}
+    {{ else }}
+      {{ $allTop = $allTop | append (dict "item" $appItem "menu" "apps" "weight" $appWeight) }}
     {{ end }}
   {{ end }}
 {{ end }}
@@ -53,6 +81,11 @@
       {{ end }}
     {{ end }}
   {{ end }}
+  {{ range $appChildren }}
+    {{ if eq .parentId $item.Identifier }}
+      {{ $extraChildren = $extraChildren | append (dict "item" .item "menu" .menu) }}
+    {{ end }}
+  {{ end }}
   <li class="nav-main menuitem-main{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if or $item.HasChildren $extraChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
@@ -74,7 +107,12 @@
     {{ end }}
   </li>
 {{ else }}
-  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}" aria-hidden="true" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+  {{/* Every non-main menu other than "apps" is hidden by default (aria-hidden
+       plus each site's own CSS/JS) and revealed conditionally — e.g. workbench's
+       "pwa" menu (installed-PWA only) or glycome's "private" menu
+       (logged-in only). "apps" entrypoint links are meant to be always
+       visible, so they're excluded from that default. */}}
+  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}"{{ if ne $entry.menu "apps" }} aria-hidden="true"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if $item.HasChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
       <label for="menu{{$idx}}">{{ $item.Name }}</label>
