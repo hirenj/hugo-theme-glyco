@@ -2,7 +2,7 @@ import { search as searchGene, lookup_protein } from '../js/mygene.js';
 import { search_snp } from '../js/ensembl_rest.js';
 import { glycoStyles } from 'ccg-shared-elements/styles';
 
-const UNIPROT_RE = /[OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2}/;
+const UNIPROT_RE = /^([OPQ][0-9][A-Z0-9]{3}[0-9]|[A-NR-Z][0-9]([A-Z][A-Z0-9]{2}[0-9]){1,2})$/;
 const RSID_RE    = /^rs[\d]+$/;
 
 let _debounce = null;
@@ -393,12 +393,20 @@ class CCGSearch extends HTMLElement {
         const species = this._speciesOverride ?? this.species;
         this.toggleAttribute('data-loading', true);
         let search;
-        if (UNIPROT_RE.test(text)) {
-            search = lookup_protein(text).then(names => [{ geneid: 1, symbol: names.symbol, prot: text }]);
-        } else if (RSID_RE.test(text)) {
+        if (RSID_RE.test(text)) {
             search = search_snp(text);
         } else if (!this._searchDirty) {
             search = searchGene(text, species);
+            // Accession-shaped strings like "B3GAT2" collide with real gene
+            // symbols, so the gene search always runs first; only fall back
+            // to the UniProt lookup when it's accession-shaped AND the gene
+            // search found nothing.
+            if (UNIPROT_RE.test(text)) {
+                search = search.then(res => res.length > 0
+                    ? res
+                    : lookup_protein(text).then(names => [{ geneid: 1, symbol: names.symbol, prot: text }])
+                );
+            }
         } else {
             this.toggleAttribute('data-loading', false);
             return;
