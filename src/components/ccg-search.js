@@ -35,9 +35,12 @@ tmpl.innerHTML = `<style>
     right: 32px;
     color: #555;
     font-size: 3px;
-    margin: 100px auto;
-    width: 0.9em;
-    height: 0.9em;
+    margin-top: 0.1em;
+    margin-bottom: 0.1em;
+    margin-left: auto;
+    margin-right: auto;
+    width: 0.8em;
+    height: 0.8em;
     border-radius: 50%;
     position: relative;
     text-indent: -9999em;
