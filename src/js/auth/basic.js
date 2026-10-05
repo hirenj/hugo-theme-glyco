@@ -15,31 +15,16 @@ const parseJwt = (token) => {
   return JSON.parse(window.atob(base64));
 };
 
-const authorizedFetch = async (url) => {
-
-  const base = await MASCP.GatorDataReader.authenticate();
-  const auth = { base, token: MASCP.GATOR_AUTH_TOKEN, clientid: MASCP.GATOR_CLIENT_ID };
-
-  const headers = {};
-  headers['Authorization'] = 'Bearer '+auth.token;
-  headers['x-api-key'] = auth.clientid;
-
-  let target_url = url.replace(/^.*documents\//,`${base}/files?path=`);
-
-  let api_resp = await fetch(new Request(target_url, {
-    method: 'GET',
-    headers,
-  })).then( resp => resp.text() );
-
-  if ( ! api_resp ) {
-    return new Response(null, {
-      status: 401,
-      statusText: 'Unauthorized'
-    });
-  }
-
-  return fetch(new Request(api_resp, {}));
-};
+// Was a two-step proxy (rewrite to a `/files?path=` endpoint, manual
+// Authorization/x-api-key headers, follow the presigned URL it returned) tied to
+// the old Gator Lambda. Cloudflare Access's session cookie replaces all of that —
+// the browser already carries it on same-origin requests, so this is just a fetch.
+// (Checked both current callers, ccg-afstudio.js/ccg-sugarbuilder-page.js — neither
+// actually exercises this path today, they only ever pass `/static/...` URLs, which
+// take the other branch in `_maybeAuthorisedFetch`. Simplified anyway, since the old
+// implementation's `MASCP.GatorDataReader.authenticate()` call depended on the
+// Auth0/Gator auth state this whole migration is removing.)
+const authorizedFetch = (url) => fetch(url, { credentials: 'include' });
 
 MASCP.GatorDataReader.wrapAuthRetrieve(MASCP.UniprotReader);
 

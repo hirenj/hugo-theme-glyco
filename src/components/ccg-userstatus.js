@@ -1,6 +1,6 @@
 import { tryLoggingIn, tryLoggingInRedirect, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
          getLastUserName, clearLastUser }
-    from '../js/auth/azuread.js';
+    from '../js/auth/cloudflare.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
 

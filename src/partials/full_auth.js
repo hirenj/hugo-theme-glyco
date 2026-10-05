@@ -1,6 +1,6 @@
 import { queueBootstrapSlot } from '../js/bootstrap';
 
-import { ensureApiLogin } from '../js/auth/azuread';
+import { ensureApiLogin } from '../js/auth/cloudflare';
 
 queueBootstrapSlot( () => {
   return ensureApiLogin();
