@@ -69,14 +69,21 @@ const getLastUserName = () => localStorage.getItem(LAST_ORCID_KEY);
 
 const clearLastUser = () => localStorage.removeItem(LAST_ORCID_KEY);
 
+// A plain navigation here would strand the user on test.glyco.me (a different
+// origin with no site content routed to it — see the master checklist) instead
+// of back on the page they clicked "log out" from, and Access's logout has no
+// documented returnTo param to redirect back with. A credentialed, no-cors
+// fetch hits the same endpoint without ever leaving the page: the response is
+// opaque (can't be read), but the browser still processes its Set-Cookie
+// header and clears CF_Authorization regardless — reading the body was never
+// needed, only the cookie-clearing side effect.
 const performLogout = () => {
-    return Promise.resolve().then(() => {
-        loginStatusPromise = null;
-        currentOrcidId = null;
-        // Navigates away — Access's own logout endpoint clears the CF_Authorization
-        // cookie. Nothing meaningful runs after this in the caller's promise chain.
-        window.location.href = LOGOUT_URL;
-    });
+    return fetch(LOGOUT_URL, { credentials: 'include', mode: 'no-cors' })
+        .catch(() => { /* opaque/cross-origin errors are expected here */ })
+        .then(() => {
+            loginStatusPromise = null;
+            currentOrcidId = null;
+        });
 };
 
 // Access has no "redirect back to an arbitrary page after login" for a page that
@@ -102,6 +109,11 @@ const tryLoggingIn = () => {
         const poll = setInterval(() => {
             if (popup.closed) {
                 clearInterval(poll);
+                // getLoginStatus() caches its result — an earlier (pre-login)
+                // check already resolved it to "logged out", and without
+                // clearing that cache here this would just return the same
+                // stale answer instead of actually re-checking.
+                loginStatusPromise = null;
                 resolve(getLoginStatus());
             }
         }, 500);

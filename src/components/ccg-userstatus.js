@@ -1,4 +1,4 @@
-import { tryLoggingIn, tryLoggingInRedirect, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
+import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
          getLastUserName, clearLastUser }
     from '../js/auth/cloudflare.js';
 
@@ -116,7 +116,7 @@ class CCGUserStatus extends HTMLElement {
             const label = document.createElement('label');
             label.style.cursor = 'pointer';
             label.innerHTML = 'Log in &nbsp;&raquo;';
-            label.addEventListener('click', () => this._loginAuto());
+            label.addEventListener('click', () => this._login());
             this._root.appendChild(label);
         }
     }
@@ -140,7 +140,7 @@ class CCGUserStatus extends HTMLElement {
             const go = document.createElement('button');
             go.className = 'glyco';
             go.innerHTML = 'go &nbsp;&raquo;';
-            go.addEventListener('click', () => this._loginAuto());
+            go.addEventListener('click', () => this._login());
             box.appendChild(go);
             if (lastUser) {
                 const another = document.createElement('button');
@@ -187,26 +187,9 @@ class CCGUserStatus extends HTMLElement {
             .catch(err => console.error('ccg-userstatus login failed', err));
     }
 
-    // A remembered lastUserName means we'd send a real @ku.dk address as
-    // login_hint, which triggers Azure AD's Home Realm Discovery redirect —
-    // an extra hop the popup+WinChan flow can't survive. Use a full-page
-    // redirect for that case; a fresh login (no hint) works fine via popup.
-    _loginAuto() {
-        if (getLastUserName()) {
-            this._loginRedirect();
-        } else {
-            this._login();
-        }
-    }
-
     _loginAsAnother() {
         clearLastUser();
         this._login();
-    }
-
-    _loginRedirect() {
-        tryLoggingInRedirect()
-            .catch(err => console.error('ccg-userstatus login (redirect) failed', err));
     }
 }
 
