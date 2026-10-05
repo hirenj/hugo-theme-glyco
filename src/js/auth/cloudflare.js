@@ -12,6 +12,8 @@ const LAST_ORCID_KEY = 'lastOrcidId';
 // Auth0 path this replaces. Access's own cookie is httpOnly and inaccessible to JS;
 // that's a deliberate security improvement, not a gap, per the plan.
 let currentOrcidId = null;
+let currentGivenName = null;
+let currentFamilyName = null;
 
 const ensureApiLogin = () => {
     // Compatibility shim for any code still reading MASCP.GatorDataReader's own
@@ -37,10 +39,14 @@ const getLoginStatus = () => {
                 .then(response => {
                     if (!response.ok) {
                         currentOrcidId = null;
+                        currentGivenName = null;
+                        currentFamilyName = null;
                         return false;
                     }
                     return response.json().then(body => {
                         currentOrcidId = body.orcidId;
+                        currentGivenName = body.givenName ?? null;
+                        currentFamilyName = body.familyName ?? null;
                         if (currentOrcidId) {
                             localStorage.setItem(LAST_ORCID_KEY, currentOrcidId);
                         }
@@ -50,6 +56,8 @@ const getLoginStatus = () => {
                 .catch(err => {
                     console.log('[auth] getLoginStatus: /api/whoami unreachable', err);
                     currentOrcidId = null;
+                    currentGivenName = null;
+                    currentFamilyName = null;
                     return false;
                 });
         }
@@ -59,11 +67,11 @@ const getLoginStatus = () => {
 
 const getUserId = () => currentOrcidId;
 
-// ORCID provides no name claims (confirmed — see plans/glyco-me-dev-deploy-auth.md's
-// Part C open questions, the planned /api/orcidInfo endpoint isn't built yet).
-// Returning nulls here is honest, not a bug — ccg-userstatus.js already falls back
-// to displaying the raw identifier (`_user`, i.e. the ORCID iD) when this is null.
-const getUserName = () => [null, null];
+// ORCID's name claims land in the Access JWT's custom.* fields, not the top
+// level — /api/whoami (worker.mjs) already unpacks that; nulls here just mean
+// ORCID itself didn't have a name on file for this iD, not a missing feature.
+// ccg-userstatus.js falls back to displaying the raw ORCID iD in that case.
+const getUserName = () => [currentGivenName, currentFamilyName];
 
 const getLastUserName = () => localStorage.getItem(LAST_ORCID_KEY);
 
@@ -83,6 +91,8 @@ const performLogout = () => {
         .then(() => {
             loginStatusPromise = null;
             currentOrcidId = null;
+            currentGivenName = null;
+            currentFamilyName = null;
         });
 };
 
