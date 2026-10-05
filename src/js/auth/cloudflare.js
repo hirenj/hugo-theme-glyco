@@ -77,23 +77,38 @@ const getLastUserName = () => localStorage.getItem(LAST_ORCID_KEY);
 
 const clearLastUser = () => localStorage.removeItem(LAST_ORCID_KEY);
 
-// A plain navigation here would strand the user on test.glyco.me (a different
-// origin with no site content routed to it — see the master checklist) instead
-// of back on the page they clicked "log out" from, and Access's logout has no
-// documented returnTo param to redirect back with. A credentialed, no-cors
-// fetch hits the same endpoint without ever leaving the page: the response is
-// opaque (can't be read), but the browser still processes its Set-Cookie
-// header and clears CF_Authorization regardless — reading the body was never
-// needed, only the cookie-clearing side effect.
+// A no-cors fetch to this endpoint (the previous approach here) turned out not
+// to reliably clear CF_Authorization at all — confirmed in Firefox, the cookie
+// was still live afterward. Browsers are inconsistent about applying
+// Set-Cookie from an opaque cross-site response, and Access's own docs only
+// ever describe logout as something a user "visits" — a real navigation, not
+// a fetch. A popup gets a real navigation without a full-page redirect away
+// from the current page (which would strand the user on test.glyco.me — a
+// different origin with no site content routed to it, and logout has no
+// documented returnTo param to redirect back with). Unlike login, nothing on
+// the other end signals completion, so this just waits a beat for the
+// (practically instant, no user interaction) logout to land, then closes the
+// popup itself — closing a window you opened is allowed regardless of its
+// current cross-origin content.
 const performLogout = () => {
-    return fetch(LOGOUT_URL, { credentials: 'include', mode: 'no-cors' })
-        .catch(() => { /* opaque/cross-origin errors are expected here */ })
-        .then(() => {
+    return new Promise(resolve => {
+        const popup = window.open(LOGOUT_URL, 'cloudflare-logout', 'width=500,height=600');
+        const finish = () => {
+            if (popup && !popup.closed) popup.close();
             loginStatusPromise = null;
             currentOrcidId = null;
             currentGivenName = null;
             currentFamilyName = null;
-        });
+            resolve();
+        };
+        if (!popup) {
+            // Popup blocked — fall back to a full-page redirect; logout still
+            // completes, the user just lands on Access's own logged-out page.
+            window.location.href = LOGOUT_URL;
+            return;
+        }
+        setTimeout(finish, 1000);
+    });
 };
 
 // Access has no "redirect back to an arbitrary page after login" for a page that

@@ -1,5 +1,5 @@
 import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
-         getLastUserName, clearLastUser }
+         getLastUserName }
     from '../js/auth/cloudflare.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
@@ -142,13 +142,10 @@ class CCGUserStatus extends HTMLElement {
             go.innerHTML = 'go &nbsp;&raquo;';
             go.addEventListener('click', () => this._login());
             box.appendChild(go);
-            if (lastUser) {
-                const another = document.createElement('button');
-                another.className = 'glyco';
-                another.textContent = 'Log in as another user »';
-                another.addEventListener('click', () => this._loginAsAnother());
-                box.appendChild(another);
-            }
+            // "Log in as another user" hidden for now — it can't actually force a
+            // different ORCID identity chooser. ORCID keeps its own independent
+            // browser session, and Access has no config to override that, so this
+            // only ever misleadingly implied a capability we don't have.
             this._root.appendChild(p);
             this._root.appendChild(box);
             return;
@@ -187,10 +184,6 @@ class CCGUserStatus extends HTMLElement {
             .catch(err => console.error('ccg-userstatus login failed', err));
     }
 
-    _loginAsAnother() {
-        clearLastUser();
-        this._login();
-    }
 }
 
 customElements.define('ccg-userstatus', CCGUserStatus);
