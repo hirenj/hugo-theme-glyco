@@ -4,6 +4,17 @@
 // readable from JS, by design) carry the session." No token management here at all.
 import MASCP from 'mascp-jstools';
 
+// GatorDataReader sends this as the x-api-key header on every request (see
+// mascp-jstools/js/lib/Service.js) — ccg-shared-backend's /api/data/latest/*
+// checks it as a Worker-side shared secret (src/lib/dataindex.mjs's
+// DATA_API_KEY), reusing this existing mechanism rather than adding a
+// Cloudflare Access Service Token (which would need new frontend code to
+// send its own two headers, for no real security gain). basic.js (the
+// module this replaces) set this too — easy to miss that it needs
+// re-setting here, since nothing else in this file touches GatorDataReader
+// config.
+MASCP.GATOR_CLIENT_ID = process.env.CLIENT_ID;
+
 const WHOAMI_URL = `${process.env.ROOT_API}/api/whoami`;
 const LOGOUT_URL = `${process.env.ROOT_API}/cdn-cgi/access/logout`;
 const LAST_ORCID_KEY = 'lastOrcidId';
