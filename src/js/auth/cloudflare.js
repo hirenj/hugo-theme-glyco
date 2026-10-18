@@ -15,6 +15,16 @@ import MASCP from 'mascp-jstools';
 // config.
 MASCP.GATOR_CLIENT_ID = process.env.CLIENT_ID;
 
+// Without this, GatorDataReader.js falls back to its own hardcoded default
+// (test.glycocode.com, or same-origin "/api") — completely ignoring
+// ROOT_API, so a test deploy (ROOT_API=https://test.glyco.me) silently kept
+// hitting the wrong backend. The old azuread.js-era auth.js this file
+// replaces set this too (same "easy to miss" class of bug as
+// GATOR_CLIENT_ID above) — lost when that file was removed, since nothing
+// else in the new Cloudflare Access flow touches GatorDataReader config
+// either.
+MASCP.GatorDataReader.server = process.env.ROOT_API;
+
 const WHOAMI_URL = `${process.env.ROOT_API}/api/whoami`;
 const LOGOUT_URL = `${process.env.ROOT_API}/cdn-cgi/access/logout`;
 const LAST_ORCID_KEY = 'lastOrcidId';

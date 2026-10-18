@@ -1,5 +1,12 @@
 {{ partial "searchbox.html" . }}
-{{ partial "user_components.html" . }}
+{{/* NOT "user_components.html" here — header.html already includes it
+     unconditionally before rendering this partial, and that script just
+     needs to load once per page (it's what registers <ccg-userstatus>,
+     used both here and in header.html itself). A second copy here used to
+     load the SAME script a second time, re-running its top-level
+     customElements.define('ccg-userstatus', ...) and throwing
+     "NotSupportedError: Cannot define multiple custom elements with the
+     same tag name" on every page using this theme. */}}
 <section class="menu">
   <input id="mobiletoggle" type="checkbox">
   <label class="mobiletoggle" for="mobiletoggle"></label>
