@@ -101,6 +101,16 @@ var guess_composition = function(composition) {
 
 var composition_to_lookup = function(composition) {
 	let lookup = {};
+	if (/[()[\]{}]/.test(composition)) {
+		// This is an IUPAC condensed glycan string (e.g. 'Gal(b1-4)Xyl'), not
+		// a composition shorthand like '2xHex1xHexNAc' - there's nothing to
+		// count, so fall back to the root sugar residue at the reducing end.
+		let root = composition.match(/([A-Za-z][A-Za-z0-9]*)$/);
+		if (root) {
+			lookup[root[1]] = 1;
+		}
+		return lookup;
+	}
 	if (! composition.match(/\d+x/)) {
 		composition = `1x${composition}`;
 	}
