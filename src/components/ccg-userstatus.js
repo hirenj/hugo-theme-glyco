@@ -162,7 +162,13 @@ class CCGUserStatus extends HTMLElement {
 
     _renderCompact() {
         if (_user !== 'anonymous') {
-            const label = document.createElement('label');
+            // Plain <span>, not <label>: a <label> wrapping a <button> (a
+            // labelable element) forwards every click on the label — including
+            // each half of a double-click on the username — straight to the
+            // button, logging the user out while they're trying to open the
+            // colour picker. There's no actual form control being labelled
+            // here, so there's no semantic reason for it to be a <label>.
+            const label = document.createElement('span');
             const name = document.createElement('span');
             name.className = 'username';
             name.textContent = _user;
