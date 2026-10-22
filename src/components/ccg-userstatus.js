@@ -107,7 +107,7 @@ tmpl.innerHTML = `
        picker also selects the username text as a word, and a selection
        drag starting on the second click can suppress the dblclick event
        outright in some browsers/trackpads. */
-    .username { margin-right: 0.5em; cursor: pointer; user-select: none; }
+    .username { margin-right: 0.5em; cursor: pointer; -webkit-user-select: none; user-select: none; }
     button.glyco { cursor: pointer; }
 
     :host([hero]) p {
@@ -254,7 +254,17 @@ class CCGUserStatus extends HTMLElement {
         if (!this._colorInputEl) {
             this._colorInputEl = document.createElement('input');
             this._colorInputEl.type = 'color';
-            this._colorInputEl.style.display = 'none';
+            // Not display:none — Safari silently refuses to open the native
+            // picker from a programmatic .click() on an element that isn't
+            // actually in the render tree. Zero-size and out of the way
+            // instead, which WebKit is fine with.
+            Object.assign(this._colorInputEl.style, {
+                position: 'fixed',
+                width: '0',
+                height: '0',
+                opacity: '0',
+                pointerEvents: 'none',
+            });
             this._colorInputEl.addEventListener('change', () => {
                 _applyColor(this._colorInputEl.value);
                 setPrefs({ color: this._colorInputEl.value })
