@@ -5,24 +5,30 @@ import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId,
 import { glycoStyles } from 'ccg-shared-elements/styles';
 
 const DEFAULT_HUE = 170;
+// Only used to seed the native colour input when nothing is in effect yet —
+// --base-saturation/--base-lum themselves are never defaulted: see
+// _applyColor, which removes rather than sets them when there's no stored
+// colour, leaving the theme's own derived values in place.
+const DEFAULT_SAT = 100;
+const DEFAULT_LUM = 50;
 const RAINBOW = 'rainbow';
 
 let _user = 'anonymous';
 let _checking = true;
 const _instances = new Set();
 
-// Only --base-hue is ever user-controlled (saturation/lightness stay the
-// theme's own derived values) — so the picker only needs to round-trip hue,
-// not a full colour, hence the single `h` pulled out of the hex->HSL math
-// below rather than a general colour-space conversion helper.
-function hueFromHex(hex) {
+// Full hex -> HSL, so the picker can round-trip the user's exact colour
+// (hue, saturation and lightness are all stored/applied independently).
+function hslFromHex(hex) {
     if (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
     const r = parseInt(hex.slice(1, 3), 16) / 255;
     const g = parseInt(hex.slice(3, 5), 16) / 255;
     const b = parseInt(hex.slice(5, 7), 16) / 255;
     const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    if (max === min) return 0;
+    const l = (max + min) / 2;
+    if (max === min) return { h: 0, s: 0, l: Math.round(l * 100) };
     const d = max - min;
+    const s = d / (1 - Math.abs(2 * l - 1));
     let h;
     switch (max) {
         case r: h = ((g - b) / d) % 6; break;
@@ -30,33 +36,52 @@ function hueFromHex(hex) {
         default: h = (r - g) / d + 4; break;
     }
     h *= 60;
-    return h < 0 ? h + 360 : h;
+    if (h < 0) h += 360;
+    return { h, s: Math.round(s * 100), l: Math.round(l * 100) };
 }
 
-// The reverse of hueFromHex, at a fixed fully-saturated mid lightness — only
-// used to seed the native colour input with *something* reasonable derived
-// from the hue currently in effect, not to round-trip the user's exact
-// original colour (which --base-hue alone can't represent anyway).
-function hexFromHue(hue) {
-    const c = 1, x = 1 - Math.abs(((hue / 60) % 2) - 1);
+// The reverse of hslFromHex — used to seed the native colour input from
+// whichever of hue/saturation/lightness are currently in effect.
+function hexFromHSL(h, s, l) {
+    s /= 100; l /= 100;
+    const c = (1 - Math.abs(2 * l - 1)) * s;
+    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
+    const m = l - c / 2;
     let [r, g, b] = [0, 0, 0];
-    if (hue < 60) [r, g, b] = [c, x, 0];
-    else if (hue < 120) [r, g, b] = [x, c, 0];
-    else if (hue < 180) [r, g, b] = [0, c, x];
-    else if (hue < 240) [r, g, b] = [0, x, c];
-    else if (hue < 300) [r, g, b] = [x, 0, c];
+    if (h < 60) [r, g, b] = [c, x, 0];
+    else if (h < 120) [r, g, b] = [x, c, 0];
+    else if (h < 180) [r, g, b] = [0, c, x];
+    else if (h < 240) [r, g, b] = [0, x, c];
+    else if (h < 300) [r, g, b] = [x, 0, c];
     else [r, g, b] = [c, 0, x];
-    const toHex = v => Math.round(v * 255).toString(16).padStart(2, '0');
+    const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2, '0');
     return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function _clearColorProps() {
+    document.documentElement.style.removeProperty('--base-hue');
+    document.documentElement.style.removeProperty('--base-saturation');
+    document.documentElement.style.removeProperty('--base-lum');
 }
 
 function _applyColor(color) {
     if (color === RAINBOW) {
-        document.documentElement.style.removeProperty('--base-hue');
+        _clearColorProps();
         document.documentElement.setAttribute(RAINBOW, '');
     } else {
         document.documentElement.removeAttribute(RAINBOW);
-        document.documentElement.style.setProperty('--base-hue', hueFromHex(color) ?? DEFAULT_HUE);
+        const hsl = hslFromHex(color);
+        // Hue alone falls back to DEFAULT_HUE to match prior behaviour;
+        // saturation/lum are never defaulted — an invalid/missing colour
+        // just clears them so the theme's own values show through.
+        document.documentElement.style.setProperty('--base-hue', hsl?.h ?? DEFAULT_HUE);
+        if (hsl) {
+            document.documentElement.style.setProperty('--base-saturation', `${hsl.s}%`);
+            document.documentElement.style.setProperty('--base-lum', `${hsl.l}%`);
+        } else {
+            document.documentElement.style.removeProperty('--base-saturation');
+            document.documentElement.style.removeProperty('--base-lum');
+        }
     }
 }
 
@@ -66,7 +91,7 @@ function _setUser(user, color) {
         _applyColor(color);
         document.body.setAttribute('data-authenticated', '');
     } else {
-        document.documentElement.style.removeProperty('--base-hue');
+        _clearColorProps();
         document.documentElement.removeAttribute(RAINBOW);
         document.body.removeAttribute('data-authenticated');
     }
@@ -292,10 +317,15 @@ class CCGUserStatus extends HTMLElement {
             return;
         }
         const input = this._colorInput();
-        const currentHue = parseFloat(
-            getComputedStyle(document.documentElement).getPropertyValue('--base-hue')
+        const style = getComputedStyle(document.documentElement);
+        const currentHue = parseFloat(style.getPropertyValue('--base-hue'));
+        const currentSat = parseFloat(style.getPropertyValue('--base-saturation'));
+        const currentLum = parseFloat(style.getPropertyValue('--base-lum'));
+        input.value = hexFromHSL(
+            Number.isFinite(currentHue) ? currentHue : DEFAULT_HUE,
+            Number.isFinite(currentSat) ? currentSat : DEFAULT_SAT,
+            Number.isFinite(currentLum) ? currentLum : DEFAULT_LUM
         );
-        input.value = hexFromHue(Number.isFinite(currentHue) ? currentHue : DEFAULT_HUE);
         input.click();
     }
 
