@@ -1,20 +1,73 @@
 import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
-         getFullName, getLastUserName }
+         getFullName, getLastUserName, getPrefs, setPrefs }
     from '../js/auth/cloudflare.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
+
+const DEFAULT_HUE = 170;
+const RAINBOW = 'rainbow';
 
 let _user = 'anonymous';
 let _checking = true;
 const _instances = new Set();
 
-function _setUser(user) {
+// Only --base-hue is ever user-controlled (saturation/lightness stay the
+// theme's own derived values) — so the picker only needs to round-trip hue,
+// not a full colour, hence the single `h` pulled out of the hex->HSL math
+// below rather than a general colour-space conversion helper.
+function hueFromHex(hex) {
+    if (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+    const r = parseInt(hex.slice(1, 3), 16) / 255;
+    const g = parseInt(hex.slice(3, 5), 16) / 255;
+    const b = parseInt(hex.slice(5, 7), 16) / 255;
+    const max = Math.max(r, g, b), min = Math.min(r, g, b);
+    if (max === min) return 0;
+    const d = max - min;
+    let h;
+    switch (max) {
+        case r: h = ((g - b) / d) % 6; break;
+        case g: h = (b - r) / d + 2; break;
+        default: h = (r - g) / d + 4; break;
+    }
+    h *= 60;
+    return h < 0 ? h + 360 : h;
+}
+
+// The reverse of hueFromHex, at a fixed fully-saturated mid lightness — only
+// used to seed the native colour input with *something* reasonable derived
+// from the hue currently in effect, not to round-trip the user's exact
+// original colour (which --base-hue alone can't represent anyway).
+function hexFromHue(hue) {
+    const c = 1, x = 1 - Math.abs(((hue / 60) % 2) - 1);
+    let [r, g, b] = [0, 0, 0];
+    if (hue < 60) [r, g, b] = [c, x, 0];
+    else if (hue < 120) [r, g, b] = [x, c, 0];
+    else if (hue < 180) [r, g, b] = [0, c, x];
+    else if (hue < 240) [r, g, b] = [0, x, c];
+    else if (hue < 300) [r, g, b] = [x, 0, c];
+    else [r, g, b] = [c, 0, x];
+    const toHex = v => Math.round(v * 255).toString(16).padStart(2, '0');
+    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+}
+
+function _applyColor(color) {
+    if (color === RAINBOW) {
+        document.documentElement.style.removeProperty('--base-hue');
+        document.documentElement.setAttribute(RAINBOW, '');
+    } else {
+        document.documentElement.removeAttribute(RAINBOW);
+        document.documentElement.style.setProperty('--base-hue', hueFromHex(color) ?? DEFAULT_HUE);
+    }
+}
+
+function _setUser(user, color) {
     _user = user;
     if (user !== 'anonymous') {
-        document.documentElement.style.setProperty('--base-hue', 170);
+        _applyColor(color);
         document.body.setAttribute('data-authenticated', '');
     } else {
         document.documentElement.style.removeProperty('--base-hue');
+        document.documentElement.removeAttribute(RAINBOW);
         document.body.removeAttribute('data-authenticated');
     }
     // render_menu.html marks private-menu items aria-hidden by default and
@@ -113,6 +166,8 @@ class CCGUserStatus extends HTMLElement {
             const name = document.createElement('span');
             name.className = 'username';
             name.textContent = _user;
+            name.title = 'Double-click to pick an accent colour (shift+double-click for rainbow)';
+            name.addEventListener('dblclick', event => this._openColorPicker(event));
             const btn = document.createElement('button');
             btn.className = 'glyco';
             btn.innerHTML = 'Log out &nbsp;&raquo;';
@@ -174,9 +229,45 @@ class CCGUserStatus extends HTMLElement {
     _checkUser() {
         _setChecking(true);
         return getLoginStatus().then(status => {
-            _setUser(status ? getUserId() : 'anonymous');
-            return status;
+            if (!status) {
+                _setUser('anonymous');
+                return status;
+            }
+            return getPrefs().then(prefs => _setUser(getUserId(), prefs?.color));
         }).finally(() => _setChecking(false));
+    }
+
+    // Lazily created single hidden <input type="color"> per instance — this
+    // is the whole "colour wheel picker": the native control, invoked
+    // programmatically since there's no visible <input> to click on.
+    _colorInput() {
+        if (!this._colorInputEl) {
+            this._colorInputEl = document.createElement('input');
+            this._colorInputEl.type = 'color';
+            this._colorInputEl.style.display = 'none';
+            this._colorInputEl.addEventListener('change', () => {
+                _applyColor(this._colorInputEl.value);
+                setPrefs({ color: this._colorInputEl.value })
+                    .catch(err => console.error('ccg-userstatus setPrefs failed', err));
+            });
+            this.shadowRoot.appendChild(this._colorInputEl);
+        }
+        return this._colorInputEl;
+    }
+
+    _openColorPicker(event) {
+        if (event.shiftKey) {
+            setPrefs({ color: RAINBOW })
+                .catch(err => console.error('ccg-userstatus setPrefs failed', err));
+            _applyColor(RAINBOW);
+            return;
+        }
+        const input = this._colorInput();
+        const currentHue = parseFloat(
+            getComputedStyle(document.documentElement).getPropertyValue('--base-hue')
+        );
+        input.value = hexFromHue(Number.isFinite(currentHue) ? currentHue : DEFAULT_HUE);
+        input.click();
     }
 
     _logout() {

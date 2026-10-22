@@ -41,6 +41,10 @@ const LOGIN_URL = `${process.env.ROOT_API}/api/login`;
 // (src/lib/orcid-auth.mjs's handleLogout) — a new capability Access itself
 // never exposed in this codebase at all.
 const LOGOUT_URL = `${process.env.ROOT_API}/api/logout`;
+// Generic per-user JSON bucket (src/lib/prefs.mjs in ccg-shared-backend) —
+// GET returns the whole blob, PUT replaces it wholesale (no server-side
+// merge), so setPrefs() below has to read-modify-write.
+const PREFS_URL = `${process.env.ROOT_API}/api/prefs`;
 const LAST_ORCID_KEY = 'lastOrcidId';
 
 // Identity is cached in memory only — no localStorage token/profile, unlike the
@@ -61,6 +65,36 @@ const ensureApiLogin = () => {
 };
 
 let loginStatusPromise = null;
+let prefsPromise = null;
+
+// Cached the same way getLoginStatus() caches loginStatusPromise — one fetch
+// per login session, not one per caller. Cleared whenever the login/logout
+// paths below clear loginStatusPromise, so a fresh session re-fetches.
+const getPrefs = () => {
+    if (!prefsPromise) {
+        prefsPromise = fetch(PREFS_URL, { credentials: 'include' })
+            .then(response => response.ok ? response.json() : {})
+            .catch(err => {
+                console.log('[auth] getPrefs: /api/prefs unreachable', err);
+                return {};
+            });
+    }
+    return prefsPromise;
+};
+
+// The endpoint replaces the whole blob (no server-side merge), so this reads
+// the current one, merges `partial` in, and writes the merged result back —
+// fine for a single user editing their own settings from one tab at a time.
+const setPrefs = (partial) => {
+    return getPrefs()
+        .then(current => ({ ...current, ...partial }))
+        .then(merged => fetch(PREFS_URL, {
+            method: 'PUT',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(merged),
+        }).then(() => { prefsPromise = Promise.resolve(merged); }));
+};
 
 // Reuses the existing SKIP_AUTHENTICATION convention (config/dev.env.js already
 // sets this when ROOT_API isn't configured — previously unconsumed anywhere).
@@ -140,6 +174,7 @@ const performLogout = () => {
         const finish = () => {
             if (popup && !popup.closed) popup.close();
             loginStatusPromise = null;
+            prefsPromise = null;
             currentOrcidId = null;
             currentName = null;
             currentGivenName = null;
@@ -188,6 +223,7 @@ const tryLoggingIn = () => {
                 // clearing that cache here this would just return the same
                 // stale answer instead of actually re-checking.
                 loginStatusPromise = null;
+                prefsPromise = null;
                 resolve(getLoginStatus());
             }
         }, 500);
@@ -215,4 +251,6 @@ export {
     getUserName,
     getFullName,
     performLogout,
+    getPrefs,
+    setPrefs,
 };
