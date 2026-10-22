@@ -1,5 +1,5 @@
 import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
-         getLastUserName }
+         getFullName, getLastUserName }
     from '../js/auth/cloudflare.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
@@ -30,12 +30,20 @@ function _setChecking(checking) {
 }
 
 function _displayName() {
-    let given = null, family = null;
+    // getFullName() is the one populated for every real login (old or new —
+    // see cloudflare.js); given/family only ever come from a still-valid
+    // pre-cutover Access session (plans/orcid-self-service-login.md Phase
+    // 2b/4) and take priority while present since they're more specific
+    // (first name only, vs. a full name string). Falls back to the raw
+    // ORCID iD only if neither is available at all.
+    let given = null, family = null, fullName = null;
     try {
         [given, family] = getUserName();
+        fullName = getFullName();
     } catch (e) { /* no profile stored yet */ }
-    const first = (given || _user).split(' ')[0];
-    return family ? `${first} ${family}` : first;
+    if (given) return family ? `${given.split(' ')[0]} ${family}` : given.split(' ')[0];
+    if (fullName) return fullName;
+    return _user;
 }
 
 const tmpl = document.createElement('template');

@@ -1,7 +1,12 @@
-// Cloudflare Access replacement for azuread.js — see Part C Phase 2 of
-// plans/glyco-me-dev-deploy-auth.md (glycome repo). The frontend's job shrinks to
-// "ask /api/whoami, let Access's own cookie (CF_Authorization, httpOnly — never
-// readable from JS, by design) carry the session." No token management here at all.
+// Originally a Cloudflare Access replacement for azuread.js (Part C Phase 2
+// of plans/glyco-me-dev-deploy-auth.md, glycome repo); as of
+// plans/orcid-self-service-login.md (same repo, 2026-10-21) the backend
+// itself moved off Access's ORCID-whitelist login onto a Worker-hosted
+// session talking to ORCID's own OIDC directly — this file's job is
+// unchanged from the frontend's point of view: "ask /api/whoami, let the
+// Worker's own cookie (httpOnly — never readable from JS) carry the
+// session." No token management here at all, same as before; only the
+// login/logout endpoint URLs changed.
 import MASCP from 'mascp-jstools';
 
 // GatorDataReader sends this as the x-api-key header on every request (see
@@ -26,13 +31,23 @@ MASCP.GATOR_CLIENT_ID = process.env.CLIENT_ID;
 MASCP.GatorDataReader.server = process.env.ROOT_API;
 
 const WHOAMI_URL = `${process.env.ROOT_API}/api/whoami`;
-const LOGOUT_URL = `${process.env.ROOT_API}/cdn-cgi/access/logout`;
+// Starts the ORCID OAuth round trip directly against ccg-shared-backend
+// (src/lib/orcid-auth.mjs) — previously this was Access's own auto-login,
+// triggered just by requesting an Access-gated URL. Now the Worker fronts
+// nothing at the edge for this, so the frontend must explicitly kick off
+// login via this endpoint rather than just asking for a protected resource.
+const LOGIN_URL = `${process.env.ROOT_API}/api/login`;
+// Was Access's own `/cdn-cgi/access/logout`; now the Worker's own endpoint
+// (src/lib/orcid-auth.mjs's handleLogout) — a new capability Access itself
+// never exposed in this codebase at all.
+const LOGOUT_URL = `${process.env.ROOT_API}/api/logout`;
 const LAST_ORCID_KEY = 'lastOrcidId';
 
 // Identity is cached in memory only — no localStorage token/profile, unlike the
-// Auth0 path this replaces. Access's own cookie is httpOnly and inaccessible to JS;
-// that's a deliberate security improvement, not a gap, per the plan.
+// Auth0 path this replaces. The session cookie is httpOnly and inaccessible to
+// JS; that's a deliberate security improvement, not a gap, per the plan.
 let currentOrcidId = null;
+let currentName = null;
 let currentGivenName = null;
 let currentFamilyName = null;
 
@@ -60,12 +75,14 @@ const getLoginStatus = () => {
                 .then(response => {
                     if (!response.ok) {
                         currentOrcidId = null;
+                        currentName = null;
                         currentGivenName = null;
                         currentFamilyName = null;
                         return false;
                     }
                     return response.json().then(body => {
                         currentOrcidId = body.orcidId;
+                        currentName = body.name ?? null;
                         currentGivenName = body.givenName ?? null;
                         currentFamilyName = body.familyName ?? null;
                         if (currentOrcidId) {
@@ -77,6 +94,7 @@ const getLoginStatus = () => {
                 .catch(err => {
                     console.log('[auth] getLoginStatus: /api/whoami unreachable', err);
                     currentOrcidId = null;
+                    currentName = null;
                     currentGivenName = null;
                     currentFamilyName = null;
                     return false;
@@ -88,29 +106,34 @@ const getLoginStatus = () => {
 
 const getUserId = () => currentOrcidId;
 
-// ORCID's name claims land in the Access JWT's custom.* fields, not the top
-// level — /api/whoami (worker.mjs) already unpacks that; nulls here just mean
-// ORCID itself didn't have a name on file for this iD, not a missing feature.
-// ccg-userstatus.js falls back to displaying the raw ORCID iD in that case.
+// givenName/familyName are populated only via a still-valid pre-cutover
+// Access session (see plans/orcid-self-service-login.md's Phase 2b/4 —
+// ORCID's own token response used by the new login flow returns a single
+// `name` field, not a given/family breakdown) — both null once that fallback
+// is retired (Phase 4). getFullName() below is the one that's always
+// populated for any real login, old or new; prefer it for display.
 const getUserName = () => [currentGivenName, currentFamilyName];
+
+const getFullName = () => currentName;
 
 const getLastUserName = () => localStorage.getItem(LAST_ORCID_KEY);
 
 const clearLastUser = () => localStorage.removeItem(LAST_ORCID_KEY);
 
-// A no-cors fetch to this endpoint (the previous approach here) turned out not
-// to reliably clear CF_Authorization at all — confirmed in Firefox, the cookie
-// was still live afterward. Browsers are inconsistent about applying
-// Set-Cookie from an opaque cross-site response, and Access's own docs only
-// ever describe logout as something a user "visits" — a real navigation, not
-// a fetch. A popup gets a real navigation without a full-page redirect away
+// A no-cors fetch to Access's old logout endpoint (the previous approach
+// here) turned out not to reliably clear the session cookie at all —
+// confirmed in Firefox, the cookie was still live afterward. Browsers are
+// inconsistent about applying Set-Cookie from an opaque cross-site response;
+// a real navigation doesn't have that problem, and the session cookie is
+// SameSite=Lax (see session.mjs) — same known/accepted cross-site-fetch
+// constraint as the login flow below, a real navigation sidesteps it the
+// same way. A popup gets a real navigation without a full-page redirect away
 // from the current page (which would strand the user on test.glyco.me — a
-// different origin with no site content routed to it, and logout has no
-// documented returnTo param to redirect back with). Unlike login, nothing on
-// the other end signals completion, so this just waits a beat for the
-// (practically instant, no user interaction) logout to land, then closes the
-// popup itself — closing a window you opened is allowed regardless of its
-// current cross-origin content.
+// different origin with no site content routed to it, and there's no
+// returnTo param to redirect back with). Nothing on the other end signals
+// completion, so this just waits a beat for the (practically instant, no
+// user interaction) logout to land, then closes the popup itself — closing a
+// window you opened is allowed regardless of its current cross-origin content.
 const performLogout = () => {
     return new Promise(resolve => {
         const popup = window.open(LOGOUT_URL, 'cloudflare-logout', 'width=500,height=600');
@@ -118,13 +141,16 @@ const performLogout = () => {
             if (popup && !popup.closed) popup.close();
             loginStatusPromise = null;
             currentOrcidId = null;
+            currentName = null;
             currentGivenName = null;
             currentFamilyName = null;
             resolve();
         };
         if (!popup) {
             // Popup blocked — fall back to a full-page redirect; logout still
-            // completes, the user just lands on Access's own logged-out page.
+            // completes, the user just lands wherever handleLogout redirects
+            // to afterward (the site root, per src/lib/orcid-auth.mjs) instead
+            // of staying on the current page.
             window.location.href = LOGOUT_URL;
             return;
         }
@@ -132,24 +158,26 @@ const performLogout = () => {
     });
 };
 
-// Access has no "redirect back to an arbitrary page after login" for a page that
-// isn't itself behind Access (the public Hugo site isn't) — only "redirect back to
-// the exact protected URL you came from". The frontend's own origin is also never
-// the same as this Worker's (see Part C), so the popup can't signal completion by
-// navigating back to "our" origin the way the old Auth0 popup flow did — reading
-// popup.location from a cross-origin popup throws a SecurityError even once
-// login has fully succeeded, it's cross-origin from first open to last close.
-// Instead, `?popup=1` tells the Worker's /api/whoami (src/worker.mjs) to serve a
-// tiny self-closing page rather than raw JSON once Access lets the request
-// through — the popup closes itself, and `popup.closed` (same-window property,
-// no cross-origin read involved) is what the poll below actually detects.
+// There's no "redirect back to an arbitrary page after login" — only
+// ccg-shared-backend's own hardcoded redirect to /api/whoami (or
+// /api/whoami?popup) once the ORCID round trip completes (see
+// src/lib/orcid-auth.mjs's handleOAuthCallback). The frontend's own origin is
+// also never the same as this Worker's (see Part C), so the popup can't
+// signal completion by navigating back to "our" origin the way the old Auth0
+// popup flow did — reading popup.location from a cross-origin popup throws a
+// SecurityError even once login has fully succeeded, it's cross-origin from
+// first open to last close. Instead, `?popup` tells /api/login to carry that
+// flag through to its final redirect, landing on a tiny self-closing page
+// (src/worker.mjs's handleSelfService) rather than raw JSON — the popup
+// closes itself, and `popup.closed` (same-window property, no cross-origin
+// read involved) is what the poll below actually detects.
 const tryLoggingIn = () => {
     return new Promise(resolve => {
-        const popup = window.open(`${WHOAMI_URL}?popup=1`, 'cloudflare-login', 'width=500,height=600');
+        const popup = window.open(`${LOGIN_URL}?popup`, 'cloudflare-login', 'width=500,height=600');
         if (!popup) {
             // Popup blocked — fall back to a full-page redirect; the user ends up
             // looking at raw JSON momentarily, but login still completes.
-            window.location.href = WHOAMI_URL;
+            window.location.href = LOGIN_URL;
             return;
         }
         const poll = setInterval(() => {
@@ -172,7 +200,7 @@ const tryLoggingIn = () => {
 // JSON after login; there's no "return to where I came from" step (see above).
 const tryLoggingInRedirect = () => {
     return Promise.resolve().then(() => {
-        window.location.href = WHOAMI_URL;
+        window.location.href = LOGIN_URL;
     });
 };
 
@@ -185,5 +213,6 @@ export {
     clearLastUser,
     getUserId,
     getUserName,
+    getFullName,
     performLogout,
 };
