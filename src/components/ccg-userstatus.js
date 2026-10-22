@@ -103,7 +103,11 @@ const tmpl = document.createElement('template');
 tmpl.innerHTML = `
 <style>
     :host { display: contents; }
-    .username { margin-right: 0.5em; }
+    /* user-select: none — otherwise double-clicking to open the colour
+       picker also selects the username text as a word, and a selection
+       drag starting on the second click can suppress the dblclick event
+       outright in some browsers/trackpads. */
+    .username { margin-right: 0.5em; cursor: pointer; user-select: none; }
     button.glyco { cursor: pointer; }
 
     :host([hero]) p {
@@ -172,7 +176,7 @@ class CCGUserStatus extends HTMLElement {
             const name = document.createElement('span');
             name.className = 'username';
             name.textContent = _user;
-            name.title = 'Double-click to pick an accent colour (shift+double-click for rainbow)';
+            name.title = 'Double-click to pick an accent colour\nShift+double-click for rainbow\nAlt+double-click to reset to default';
             name.addEventListener('dblclick', event => this._openColorPicker(event));
             const btn = document.createElement('button');
             btn.className = 'glyco';
@@ -262,6 +266,15 @@ class CCGUserStatus extends HTMLElement {
     }
 
     _openColorPicker(event) {
+        if (event.altKey) {
+            // null (not omitting the field) explicitly clears a previously
+            // stored colour/rainbow preference — _applyColor(null) falls
+            // through to DEFAULT_HUE the same way "never set" does.
+            setPrefs({ color: null })
+                .catch(err => console.error('ccg-userstatus setPrefs failed', err));
+            _applyColor(null);
+            return;
+        }
         if (event.shiftKey) {
             setPrefs({ color: RAINBOW })
                 .catch(err => console.error('ccg-userstatus setPrefs failed', err));
