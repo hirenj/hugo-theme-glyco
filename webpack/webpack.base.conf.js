@@ -22,7 +22,13 @@ class WebpackHashWriter {
   }
 }
 
-const ENV_VARIABLES = ['ROOT_API', 'CLIENT_ID'];
+// SKIP_AUTHENTICATION added alongside the other two: cloudflare.js reads
+// process.env.SKIP_AUTHENTICATION directly, and EnvironmentPlugin's array
+// form throws a clear build-time error for any listed var that isn't
+// defined in the environment at all (empty string is fine, undefined is
+// not) — better than the alternative, a `process is not defined`
+// ReferenceError at runtime once this bundle actually loads in a browser.
+const ENV_VARIABLES = ['ROOT_API', 'CLIENT_ID', 'SKIP_AUTHENTICATION'];
 
 const theme = 'hugo-theme-glyco';
 
@@ -87,7 +93,23 @@ module.exports = {
       loader: 'vue-loader',
       options: { cacheBusting: true }
     },
-    { test: /\.css$/, exclude: /node_modules/, use: ['vue-style-loader', 'css-loader']},
+    // glycosuite.css is excluded here and raw-loaded below instead: it's not
+    // a .vue SFC's own scoped style, it's imported as plain text by
+    // js/components/ccg-styles.js (`glycoStyles.replaceSync(css_data)`) to
+    // build a constructable stylesheet adopted into ccg-userstatus's shadow
+    // root. Fed through vue-style-loader/css-loader instead, `css_data`
+    // comes back as whatever module shape css-loader produces rather than a
+    // plain string, so replaceSync() gets the wrong input and the shadow
+    // root ends up with no (or broken) styles — no build error, just a
+    // silently unstyled/misstyled <ccg-userstatus>. (The symlinked
+    // ccg-shared-elements/ path also resolves outside node_modules/ once
+    // webpack follows the symlink, so `exclude: /node_modules/` below
+    // wouldn't have caught it anyway.)
+    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['vue-style-loader', 'css-loader']},
+    {
+      test: /glycosuite\.css$/,
+      use: 'raw-loader'
+    },
     {
       test: /sugars\.svg$/,
       use: 'raw-loader'
