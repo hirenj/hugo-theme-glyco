@@ -24,14 +24,20 @@
  * Sites under the same deployment (separately built/deployed Hugo sites,
  * e.g. multiple apps sharing one domain) can also opt into a generic
  * "apps" menu of entrypoint links to each other: if a site's `data/apps.json`
- * provides `.Site.Data.apps` as a list of `{id, name, path, weight, parent}`,
- * one link per entry is synthesized here (menu name "apps"), skipping
- * whichever entry's `id` matches the site's own `Site.Params.app_id`. A
- * negative `weight` hides that entry on every site entirely (e.g. an app
- * not yet deployed) rather than just sorting it. An entry's optional
- * `parent` works exactly like the cross-menu `params.parentId` above — it
- * names a `main` item's identifier to graft this entry's link into that
- * item's dropdown instead of rendering it as a flat top-level link. This
+ * provides `.Site.Data.apps` as a list of
+ * `{id, name, path, weight, parent, children}`, one link per entry is
+ * synthesized here (menu name "apps"), skipping whichever entry's `id`
+ * matches the site's own `Site.Params.app_id` — that site is expected to
+ * render its own nav for itself (e.g. via `main`/grafted menu entries) rather
+ * than linking to itself. A negative `weight` hides that entry on every site
+ * entirely (e.g. an app not yet deployed) rather than just sorting it. An
+ * entry's optional `parent` works exactly like the cross-menu
+ * `params.parentId` above — it names a `main` item's identifier to graft this
+ * entry's link into that item's dropdown instead of rendering it as a flat
+ * top-level link. An entry's optional `children`, a list of `{name, path}`,
+ * gives the entry its own dropdown of absolute links (shown on every site
+ * except the app's own, per the self-exclusion above) — paths should be
+ * absolute since they're rendered across multiple sites' baseURLs. This
  * partial has no knowledge of what apps exist — only of this generic data
  * shape.
  */}}
@@ -52,7 +58,11 @@
 {{ range $app := .Site.Data.apps }}
   {{ $appWeight := $app.weight | default 0 }}
   {{ if and (ne $app.id $selfAppId) (ge $appWeight 0) }}
-    {{ $appItem := dict "Identifier" $app.id "Name" $app.name "Title" $app.name "URL" $app.path "Weight" $appWeight "HasChildren" false "Children" slice "Params" dict }}
+    {{ $appGrandchildren := slice }}
+    {{ range $child := $app.children }}
+      {{ $appGrandchildren = $appGrandchildren | append (dict "URL" $child.path "Title" $child.name "Name" $child.name) }}
+    {{ end }}
+    {{ $appItem := dict "Identifier" $app.id "Name" $app.name "Title" $app.name "URL" $app.path "Weight" $appWeight "HasChildren" (gt (len $appGrandchildren) 0) "Children" $appGrandchildren "Params" dict }}
     {{ $appParent := $app.parent | default "" }}
     {{ if $appParent }}
       {{ $appChildren = $appChildren | append (dict "item" $appItem "menu" "apps" "parentId" $appParent) }}
