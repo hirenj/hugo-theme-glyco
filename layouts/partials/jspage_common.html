@@ -31,6 +31,23 @@
 {{ with index $wp $cssKey }}
 <link rel="stylesheet" href="{{ printf "./%s" . | relURL }}">
 {{ end }}
+{{/* Pages whose jsentry statically imports glycan.js/sviewer (directly, or via
+     a component like ccg-glycodomainviewer that uses mascp-jstools's
+     TrackRendererComponent/GatorComponent) need the vendor-viewer chunk split
+     out in build/webpack.hugo.conf.js's vendorViewer cache group — keep this
+     list in sync with that cache group's test regex. Verify with a production
+     build (`just hugo-webpack`) whenever an entry's imports change: its
+     webpack entrypoint report lists "vendor-viewer" only for entries that
+     actually need it. */}}
+{{ $viewerEntries := slice "glymap" "glycodomain" "afstudio" "sugarbuilder" }}
+{{ if in $viewerEntries .Params.jsentry }}
+{{ with index $wp "vendor-viewer.css" }}
+<link rel="stylesheet" href="{{ printf "./%s" . | relURL }}">
+{{ end }}
+{{ with index $wp "vendor-viewer" }}
+<script src="{{ printf "./js/%s" . | relURL }}"></script>
+{{ end }}
+{{ end }}
 {{ $key := printf "site/%s" .Params.jsentry }}
 {{ with index $wp $key }}
 <script type="module" src="{{ printf "js/%s" . | relURL }}"></script>

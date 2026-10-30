@@ -7,7 +7,14 @@
 // Worker's own cookie (httpOnly — never readable from JS) carry the
 // session." No token management here at all, same as before; only the
 // login/logout endpoint URLs changed.
-import MASCP from 'mascp-jstools';
+// Importing the full 'mascp-jstools' barrel would drag in TrackRendererComponent
+// and GatorComponent, which pull in glycan.js/sviewer (~800KB) purely for the
+// genome-track drawing feature — nothing this file touches. Import just the
+// lightweight MASCP core + GatorDataReader instead, and wire them together the
+// same way mascp-jstools/js/index.js does.
+import MASCP from 'mascp-jstools/js/lib/MASCP';
+import GatorDataReader from 'mascp-jstools/js/lib/GatorDataReader';
+MASCP.GatorDataReader = GatorDataReader;
 
 // GatorDataReader sends this as the x-api-key header on every request (see
 // mascp-jstools/js/lib/Service.js) — ccg-shared-backend's /api/data/latest/*
