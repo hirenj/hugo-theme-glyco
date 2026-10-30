@@ -287,6 +287,17 @@ button[disabled].glyco, button[disabled].glyco:before, button[disabled].glyco:af
   border-radius: 0px;
 }
 
+/* Any ".actions" button-group container that holds adjacent .glyco buttons
+   is assumed to want them flush - zero its flex/grid gap so a page/component
+   author doesn't need to remember to do this themselves (a stray `gap` here
+   is exactly what breaks the margin math the adjacency rule above relies
+   on). Only helps containers using the ".actions" convention; a container
+   with a different name, or slotted content crossing a shadow-DOM boundary,
+   still needs its own handling. */
+.actions:has(.glyco + .glyco) {
+  gap: 0px;
+}
+
 
 h1,h2 {
   font-family: 'Verdana','Helvetica',sans-serif;
