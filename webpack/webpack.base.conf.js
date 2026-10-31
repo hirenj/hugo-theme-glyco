@@ -63,6 +63,14 @@ module.exports = {
     path: path.resolve(process.cwd(), 'static/js'),
     filename: '[name].[hash].js'
   },
+  // This config is invoked with `process.cwd()` at the consuming site's root
+  // (e.g. glyco_me-docs), but the theme's own loader devDependencies
+  // (babel-loader, css-loader, ...) are declared on the theme's own
+  // package.json and npm doesn't always hoist them above this package's own
+  // node_modules — resolve loaders from both places.
+  resolveLoader: {
+    modules: ['node_modules', path.resolve(__dirname, '../node_modules')],
+  },
   optimization: {
     runtimeChunk: 'single', // enable "runtime" chunk
     splitChunks: {
@@ -105,7 +113,7 @@ module.exports = {
     // ccg-shared-elements/ path also resolves outside node_modules/ once
     // webpack follows the symlink, so `exclude: /node_modules/` below
     // wouldn't have caught it anyway.)
-    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['vue-style-loader', 'css-loader']},
+    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['vue-style-loader', { loader: 'css-loader', options: { esModule: false } }]},
     {
       test: /glycosuite\.css$/,
       use: 'raw-loader'
