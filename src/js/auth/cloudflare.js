@@ -9,19 +9,19 @@
 // login/logout endpoint URLs changed.
 // This file only needs MASCP.GatorDataReader for auth — not the
 // TrackRendererComponent/GatorComponent glycan-drawing components also in the
-// 'mascp-jstools' barrel — but this file is shared across multiple sites
-// (glycome, workbench, ...) via their own independent mascp-jstools installs,
-// each with different webpack resolution rules. A deep subpath import here
-// (mascp-jstools/js/lib/MASCP) broke sites whose mascp-jstools copy enforces
-// its package.json "exports" field strictly (only ".", "./util", "./MASCP"
-// are exported — not "./js/lib/MASCP" or "./js/lib/GatorDataReader"), even
-// though it happened to work in glycome (its webpack config aliases
-// 'mascp-jstools' to an absolute path, which bypasses "exports" entirely —
-// not true of other consumers). Keep this as the portable full-barrel import;
-// glycome's own webpack.hugo.conf.js redirects it to a lightweight shim via
-// NormalModuleReplacementPlugin instead, so the bundle-size fix lives there,
-// not here.
-import MASCP from 'mascp-jstools';
+// full 'mascp-jstools' barrel (js/index.js), which pull in glycan.js/sviewer
+// (~800KB) for nothing. Import the two public subpaths mascp-jstools's
+// package.json exports instead, and wire them together the same way
+// js/index.js does (MASCP.GatorDataReader = GatorDataReader). A prior attempt
+// used an unexported deep path (mascp-jstools/js/lib/MASCP) that only
+// resolved in glycome, whose webpack config aliases the bare 'mascp-jstools'
+// specifier to an absolute path (needed to dedupe symlinked copies) in a way
+// that happened to bypass the "exports" field check entirely — other sites'
+// builds enforced it normally and failed. These two subpaths are officially
+// exported, so plain `import 'mascp-jstools/<subpath>'` resolves everywhere.
+import MASCP from 'mascp-jstools/MASCP';
+import GatorDataReader from 'mascp-jstools/GatorDataReader';
+MASCP.GatorDataReader = GatorDataReader;
 
 // GatorDataReader sends this as the x-api-key header on every request (see
 // mascp-jstools/js/lib/Service.js) — ccg-shared-backend's /api/data/latest/*
