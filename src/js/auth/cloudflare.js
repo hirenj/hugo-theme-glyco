@@ -7,14 +7,21 @@
 // Worker's own cookie (httpOnly — never readable from JS) carry the
 // session." No token management here at all, same as before; only the
 // login/logout endpoint URLs changed.
-// Importing the full 'mascp-jstools' barrel would drag in TrackRendererComponent
-// and GatorComponent, which pull in glycan.js/sviewer (~800KB) purely for the
-// genome-track drawing feature — nothing this file touches. Import just the
-// lightweight MASCP core + GatorDataReader instead, and wire them together the
-// same way mascp-jstools/js/index.js does.
-import MASCP from 'mascp-jstools/js/lib/MASCP';
-import GatorDataReader from 'mascp-jstools/js/lib/GatorDataReader';
-MASCP.GatorDataReader = GatorDataReader;
+// This file only needs MASCP.GatorDataReader for auth — not the
+// TrackRendererComponent/GatorComponent glycan-drawing components also in the
+// 'mascp-jstools' barrel — but this file is shared across multiple sites
+// (glycome, workbench, ...) via their own independent mascp-jstools installs,
+// each with different webpack resolution rules. A deep subpath import here
+// (mascp-jstools/js/lib/MASCP) broke sites whose mascp-jstools copy enforces
+// its package.json "exports" field strictly (only ".", "./util", "./MASCP"
+// are exported — not "./js/lib/MASCP" or "./js/lib/GatorDataReader"), even
+// though it happened to work in glycome (its webpack config aliases
+// 'mascp-jstools' to an absolute path, which bypasses "exports" entirely —
+// not true of other consumers). Keep this as the portable full-barrel import;
+// glycome's own webpack.hugo.conf.js redirects it to a lightweight shim via
+// NormalModuleReplacementPlugin instead, so the bundle-size fix lives there,
+// not here.
+import MASCP from 'mascp-jstools';
 
 // GatorDataReader sends this as the x-api-key header on every request (see
 // mascp-jstools/js/lib/Service.js) — ccg-shared-backend's /api/data/latest/*
