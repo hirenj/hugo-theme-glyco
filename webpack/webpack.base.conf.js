@@ -1,5 +1,4 @@
 const path = require('path');
-const { VueLoaderPlugin } = require('vue-loader');
 const webpack = require('webpack');
 const fs = require('fs');
 
@@ -90,22 +89,16 @@ module.exports = {
   },  
   resolve: {
     alias: {
-      vue: 'vue/dist/vue.js',
       'glycan.js' : path.resolve('./node_modules/glycan.js')
     },
   },
   module: {
     rules: [
-    {
-      test: /\.vue$/,
-      loader: 'vue-loader',
-      options: { cacheBusting: true }
-    },
     // glycosuite.css is excluded here and raw-loaded below instead: it's not
-    // a .vue SFC's own scoped style, it's imported as plain text by
+    // a component's scoped style, it's imported as plain text by
     // js/components/ccg-styles.js (`glycoStyles.replaceSync(css_data)`) to
     // build a constructable stylesheet adopted into ccg-userstatus's shadow
-    // root. Fed through vue-style-loader/css-loader instead, `css_data`
+    // root. Fed through style-loader/css-loader instead, `css_data`
     // comes back as whatever module shape css-loader produces rather than a
     // plain string, so replaceSync() gets the wrong input and the shadow
     // root ends up with no (or broken) styles — no build error, just a
@@ -113,7 +106,7 @@ module.exports = {
     // ccg-shared-elements/ path also resolves outside node_modules/ once
     // webpack follows the symlink, so `exclude: /node_modules/` below
     // wouldn't have caught it anyway.)
-    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['vue-style-loader', { loader: 'css-loader', options: { esModule: false } }]},
+    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['style-loader', { loader: 'css-loader', options: { esModule: false } }]},
     {
       test: /glycosuite\.css$/,
       use: 'raw-loader'
@@ -156,7 +149,6 @@ module.exports = {
     }],
   },
   plugins: [
-    new VueLoaderPlugin(),
     new WebpackHashWriter(),
     new webpack.EnvironmentPlugin(ENV_VARIABLES)
   ],
