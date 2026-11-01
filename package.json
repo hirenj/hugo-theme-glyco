@@ -15,7 +15,6 @@
   "author": "hirenj@gmail.com",
   "license": "MIT",
   "dependencies": {
-    "auth0-js": "^9.10.2",
     "glycan.js": "github:hirenj/glycan.js",
     "mascp-jstools": "github:hirenj/mascp-jstools#nolegacy",
     "sviewer": "github:hirenj/sviewer",
