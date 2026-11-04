@@ -1,6 +1,14 @@
 function renderData(seq,peptides) {
 peptides = peptides['application/json+msdata'] || [];
 
+// msdata v1 sites are [position, composition] tuples; v2 sites are
+// {position, observed, inferred} objects (observed/inferred are the
+// composition-or-Unimod-name actually seen, and the glycan classes
+// concluded from it — see ccg-data-schemas/msdata.schema.json). Detected
+// per-item via Array.isArray so both versions render through the same
+// script while data-builds migrates.
+var DEAMIDATED = ['Deamidated','Deamidated:18O(1)'];
+
 var intervals = [];
 
 let glyphs_at_site = {};
@@ -131,7 +139,7 @@ var render_peptide = function(peptide) {
 
 	peptide_lines[peptide.acc].push(pep_line);
 
-	if ( (! peptide.sites) && (! peptide.composition) ) {
+	if ( (! peptide.sites) && (! peptide.composition) && (! peptide.ambiguous_sites) ) {
 		return;
 	}
 
@@ -151,12 +159,55 @@ var render_peptide = function(peptide) {
 		ambiguous_shapes[peptide.acc].push({ "aa" : Math.floor(0.5*peptide.start + 0.5*peptide.end), "type" : "marker" , "options" : { "content" : sugar, "start" : peptide.start, "end" : peptide.end, "count" : count, "stretch": true, "height" : 10, "width": 3, "fill" : "none", "text_fill" : "#555", "border" : "#ddd", "no_tracer" : true, "bare_element" : false, "zoom_level" : "text", "offset" : base_offset + 2.5 }});
 	}
 
+	// v2-only: a site localized to a residue range rather than one exact
+	// position (ambiguousSite in msdata.schema.json). Same marker shape as
+	// the whole-peptide composition guess above, just anchored to the
+	// site's own [first, last] instead of the whole peptide.
+	(peptide.ambiguous_sites || []).forEach(function renderAmbiguousSite(asite) {
+		var first = asite.first, last = asite.last;
+		if (first == null || last == null) return;
+		var mid = Math.floor(0.5*first + 0.5*last);
+		if (isNaN(mid)) return;
+
+		if (asite.observed && DEAMIDATED.indexOf(asite.observed) < 0) {
+			let { sugar, count } = guess_composition(asite.observed);
+			if (! sugar) sugar = asite.observed;
+			var amb_key = 'amb:' + first + '-' + last + sugar;
+			if (seen_sites[amb_key]) return;
+			seen_sites[amb_key] = true;
+			ambiguous_shapes[peptide.acc].push({ "aa" : mid, "type" : "marker" , "options" : { "content" : sugar, "start" : first, "end" : last, "count" : count, "stretch": true, "height" : 10, "width": 3, "fill" : "none", "text_fill" : "#555", "border" : "#ddd", "no_tracer" : true, "bare_element" : false, "zoom_level" : "text", "offset" : base_offset + 2.5 }});
+		} else {
+			var label = asite.observed || ((asite.inferred && asite.inferred.length) ? asite.inferred.join(',') : '?');
+			var label_key = 'amb:' + first + '-' + last + '|' + label;
+			if (seen_sites[label_key]) return;
+			seen_sites[label_key] = true;
+			ambiguous_shapes[peptide.acc].push({ "aa" : mid, "type" : "text", "options" : { "offset" : base_offset + 2.5, "height" : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
+		}
+	});
 
 	var has_site = false;
-	(peptide.sites || []).filter( block => block[0] ).forEach(function renderSite(site_block) {
-		var site = site_block[0];
+	(peptide.sites || []).forEach(function renderSite(site_block) {
+		var fields = Array.isArray(site_block)
+			? { position: site_block[0], observed: site_block[1], inferred: null }
+			: { position: site_block.position, observed: site_block.observed, inferred: site_block.inferred };
+		var site = fields.position;
+		if (! site) return;
 		has_site = true;
-		var composition = site_block[1].replace(/1x/g,'');
+
+		if ( (! fields.observed) || DEAMIDATED.indexOf(fields.observed) >= 0 ) {
+			// Nothing composition-shaped was observed at this exact position
+			// (curated/inferred-only site, or a PNGase F deamidation mass
+			// shift) — nothing to pick a sugar icon from, so label it with
+			// whatever we do have instead of guessing a shape.
+			var label = fields.observed || ((fields.inferred && fields.inferred.length) ? fields.inferred.join(',') : '?');
+			var label_key = site + '|' + label;
+			if (seen_sites[label_key]) return;
+			seen_sites[label_key] = true;
+			return_data[peptide.acc].push({ "aa" : site, "type" : "text", "options" : { "offset" : base_offset - 9, "height" : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
+			return;
+		}
+
+		var composition = fields.observed.replace(/1x/g,'');
 
 		let is_sugar = true;
 		let identified = false;
@@ -200,7 +251,7 @@ var render_peptide = function(peptide) {
 		}
 
 		if ( ! identified ) {
-			let lookup = composition_to_lookup(site_block[1]);
+			let lookup = composition_to_lookup(fields.observed);
 			if (seq.charAt(site - 1) == 'N') {
 				if (((lookup['Hex'] - lookup['HexNAc']) > 1) && lookup['HexNAc'] >= 2) {
 					composition = 'man(a1-2)man(a1-3)[man(a1-3)[man(a1-6)]man(a1-6)]man(b1-4)glcnac(b1-4)glcnac'
