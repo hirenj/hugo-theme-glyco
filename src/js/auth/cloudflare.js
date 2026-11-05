@@ -152,6 +152,31 @@ const getLoginStatus = () => {
     return loginStatusPromise;
 };
 
+// Account-wide "which glycan renderer style" setting, riding on the same
+// generic prefs blob as the `color` field (see getPrefs/setPrefs above) —
+// no backend change needed, prefs.mjs stores any JSON shape as-is. Logged
+// out, there's no account to attach it to, so it falls back to a plain
+// localStorage key instead of just always resetting to the default — once
+// a real login happens, the account-wide value takes over (no migration of
+// a prior anonymous choice into the account; the two are independent).
+const DEFAULT_RENDERER = 'svg';
+const LOCAL_RENDERER_KEY = 'preferredRenderer';
+
+const getPreferredRenderer = () => getLoginStatus().then(loggedIn => {
+    if (!loggedIn) {
+        return localStorage.getItem(LOCAL_RENDERER_KEY) || DEFAULT_RENDERER;
+    }
+    return getPrefs().then(prefs => prefs.renderer || DEFAULT_RENDERER);
+});
+
+const setPreferredRenderer = (name) => getLoginStatus().then(loggedIn => {
+    if (!loggedIn) {
+        localStorage.setItem(LOCAL_RENDERER_KEY, name);
+        return;
+    }
+    return setPrefs({ renderer: name });
+});
+
 const getUserId = () => currentOrcidId;
 
 // givenName/familyName are populated only via a still-valid pre-cutover
@@ -267,4 +292,6 @@ export {
     performLogout,
     getPrefs,
     setPrefs,
+    getPreferredRenderer,
+    setPreferredRenderer,
 };
