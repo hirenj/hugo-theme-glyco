@@ -15,6 +15,7 @@
   "author": "hirenj@gmail.com",
   "license": "MIT",
   "dependencies": {
+    "@simplewebauthn/browser": "14.0.0",
     "glycan.js": "github:hirenj/glycan.js",
     "mascp-jstools": "github:hirenj/mascp-jstools#nolegacy",
     "sviewer": "github:hirenj/sviewer",

@@ -1,5 +1,6 @@
-import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getUserName,
-         getFullName, getLastUserName, getPrefs, setPrefs }
+import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId, getOrcidId, getUserName,
+         getFullName, getLastUserName, getPrefs, setPrefs, getFlags,
+         loginWithPasskey, registerPasskey, linkOrcid, unlinkOrcid, listPasskeys, removePasskey }
     from '../js/auth/cloudflare.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
@@ -100,6 +101,18 @@ function _setUser(user, color) {
     document.querySelectorAll('li.nav-private').forEach(li =>
         li.setAttribute('aria-hidden', user === 'anonymous' ? 'true' : 'false'));
     for (const el of _instances) el._update();
+}
+
+// Same convention as render_menu.html's li.nav-private above: a template
+// opts an element into flag-gating by adding data-flag="<flag-name>" and
+// starting it hidden; this is the one place that corrects it once the
+// account's enabled flags are known. `flags` is the full list the backend
+// returned (see getFlags()/`/api/account/flags`) — ORCID-less/anonymous
+// visitors just get `[]`, so every data-flag element stays hidden for them.
+function _applyFlags(flags) {
+    document.querySelectorAll('[data-flag]').forEach(el => {
+        el.hidden = !flags.includes(el.dataset.flag);
+    });
 }
 
 function _setChecking(checking) {
@@ -211,11 +224,26 @@ class CCGUserStatus extends HTMLElement {
             label.appendChild(btn);
             this._root.appendChild(label);
         } else {
+            // Passkey is the primary action now (section (b) — "passkeys as
+            // primary login, ORCID linkable"); the old ORCID popup moves to
+            // a smaller secondary link rather than disappearing — some
+            // visitors won't have a passkey registered yet and need a way
+            // in regardless.
             const label = document.createElement('label');
             label.style.cursor = 'pointer';
             label.innerHTML = 'Log in &nbsp;&raquo;';
-            label.addEventListener('click', () => this._login());
+            label.addEventListener('click', () => this._loginWithPasskey());
+            const orcidLink = document.createElement('a');
+            orcidLink.href = '#';
+            orcidLink.style.marginLeft = '0.75em';
+            orcidLink.style.fontSize = '0.85em';
+            orcidLink.textContent = 'or sign in with ORCID';
+            orcidLink.addEventListener('click', event => {
+                event.preventDefault();
+                this._loginWithOrcid();
+            });
             this._root.appendChild(label);
+            this._root.appendChild(orcidLink);
         }
     }
 
@@ -232,14 +260,23 @@ class CCGUserStatus extends HTMLElement {
             const p = document.createElement('p');
             p.innerHTML = lastUser
                 ? `Log in as <br/> ${lastUser}`
-                : 'Log in using <br/>your UCPH<br/> account';
+                : 'Log in using <br/>a passkey';
             const box = document.createElement('div');
             box.className = 'button_box';
             const go = document.createElement('button');
             go.className = 'glyco';
-            go.innerHTML = 'go &nbsp;&raquo;';
-            go.addEventListener('click', () => this._login());
+            go.innerHTML = 'Go &nbsp;&raquo;';
+            go.addEventListener('click', () => this._loginWithPasskey());
             box.appendChild(go);
+
+            const orcidGo = document.createElement('button');
+            orcidGo.className = 'glyco';
+            orcidGo.innerHTML = 'ORCID &nbsp;&raquo;';
+            orcidGo.addEventListener('click', event => {
+                event.preventDefault();
+                this._loginWithOrcid();
+            });
+            box.appendChild(orcidGo);
             // "Log in as another user" hidden for now — it can't actually force a
             // different ORCID identity chooser. ORCID keeps its own independent
             // browser session, and Access has no config to override that, so this
@@ -259,16 +296,111 @@ class CCGUserStatus extends HTMLElement {
         box.appendChild(btn);
         this._root.appendChild(p);
         this._root.appendChild(box);
+        this._root.appendChild(this._renderLinkedAccounts());
+    }
+
+    // Small "linked accounts" section (plans/analytics-passkeys-user-content.md
+    // section (b)) — lets an account started with one login method pick up
+    // the other, rather than being permanently stuck with whichever it
+    // started with. Only shown in the hero view (a dedicated account view),
+    // not the compact navbar one — there's no room there and it's not a
+    // frequent action.
+    _renderLinkedAccounts() {
+        const box = document.createElement('div');
+        box.className = 'linked-accounts';
+        const orcidId = getOrcidId();
+        const orcidP = document.createElement('p');
+        if (orcidId) {
+            orcidP.textContent = `ORCID: ${orcidId} `;
+            const unlink = document.createElement('a');
+            unlink.href = '#';
+            unlink.style.fontSize = '0.85em';
+            unlink.textContent = '(unlink)';
+            unlink.addEventListener('click', event => {
+                event.preventDefault();
+                this._unlinkOrcid();
+            });
+            orcidP.appendChild(unlink);
+        } else {
+            const link = document.createElement('a');
+            link.href = '#';
+            link.textContent = 'Link an ORCID iD to this account';
+            link.addEventListener('click', event => {
+                event.preventDefault();
+                this._linkOrcid();
+            });
+            orcidP.appendChild(link);
+        }
+        box.appendChild(orcidP);
+
+        const passkeyP = document.createElement('p');
+        const addPasskey = document.createElement('a');
+        addPasskey.href = '#';
+        addPasskey.textContent = 'Add a passkey for this device';
+        addPasskey.addEventListener('click', event => {
+            event.preventDefault();
+            this._addPasskey();
+        });
+        passkeyP.appendChild(addPasskey);
+        box.appendChild(passkeyP);
+
+        // Visibility into what's actually registered — there's no reliable
+        // way to ask WebAuthn itself "does this device already have a
+        // passkey for this site" before offering to register one (it's
+        // deliberately not exposed to JS, for privacy — see
+        // ccg-shared-backend's handleListPasskeys comment), so this list is
+        // the practical alternative: see what you've got before adding
+        // another, and remove a lost/retired device's directly (passkeys
+        // have no protocol-level expiry; removal is the real mechanism).
+        // Fetched async and filled in after `box` is already returned/
+        // appended — the `passkeyList` reference stays valid regardless of
+        // insertion order.
+        const passkeyList = document.createElement('ul');
+        passkeyList.className = 'passkey-list';
+        box.appendChild(passkeyList);
+        listPasskeys().then(passkeys => {
+            passkeyList.innerHTML = '';
+            if (passkeys.length === 0) {
+                const li = document.createElement('li');
+                li.textContent = 'No passkeys registered yet.';
+                passkeyList.appendChild(li);
+                return;
+            }
+            passkeys.forEach(pk => {
+                const li = document.createElement('li');
+                li.textContent = `Passkey added ${new Date(pk.createdAt).toLocaleDateString()} `;
+                const remove = document.createElement('a');
+                remove.href = '#';
+                remove.style.fontSize = '0.85em';
+                remove.textContent = '(remove)';
+                remove.addEventListener('click', event => {
+                    event.preventDefault();
+                    this._removePasskey(pk.credentialId);
+                });
+                li.appendChild(remove);
+                passkeyList.appendChild(li);
+            });
+        }).catch(err => console.error('ccg-userstatus listPasskeys failed', err));
+
+        return box;
     }
 
     _checkUser() {
         _setChecking(true);
+        // Independent of login status (getFlags() itself handles the
+        // anonymous case), so it's kicked off alongside the login check
+        // rather than chained after it — no need to wait on one to resolve
+        // the other.
+        getFlags().then(_applyFlags);
         return getLoginStatus().then(status => {
             if (!status) {
                 _setUser('anonymous');
                 return status;
             }
-            return getPrefs().then(prefs => _setUser(getUserId(), prefs?.color));
+            // getUserId() is null for a logged-in passkey-only account with
+            // no ORCID linked yet (section (b)) — fall back to a generic
+            // label rather than literally displaying "null".
+            return getPrefs().then(prefs => _setUser(getUserId() || 'your account', prefs?.color));
         }).finally(() => _setChecking(false));
     }
 
@@ -333,13 +465,69 @@ class CCGUserStatus extends HTMLElement {
         performLogout()
             .then(() => ensureApiLogin())
             .then(() => _setUser('anonymous'))
+            .then(() => getFlags().then(_applyFlags))
             .catch(err => console.error('ccg-userstatus logout failed', err));
     }
 
-    _login() {
+    // Renamed from the old _login() — ORCID is now the secondary login path
+    // (section (b)); _loginWithPasskey() below is primary.
+    _loginWithOrcid() {
         tryLoggingIn()
             .then(() => this._checkUser())
-            .catch(err => console.error('ccg-userstatus login failed', err));
+            .catch(err => console.error('ccg-userstatus ORCID login failed', err));
+    }
+
+    _loginWithPasskey() {
+        loginWithPasskey()
+            .then(() => this._checkUser())
+            .catch(err => console.error('ccg-userstatus passkey login failed', err));
+    }
+
+    // Works whether or not the caller is already logged in — an anonymous
+    // caller gets a brand-new passkey-first account; an already-logged-in
+    // caller gets this passkey added to their existing account (see
+    // ccg-shared-backend's webauthn.mjs, which decides which from the
+    // session, not this call).
+    _addPasskey() {
+        registerPasskey()
+            .then(() => this._checkUser())
+            .catch(err => console.error('ccg-userstatus passkey registration failed', err));
+    }
+
+    _linkOrcid() {
+        linkOrcid()
+            .then(() => this._checkUser())
+            .catch(err => console.error('ccg-userstatus ORCID linking failed', err));
+    }
+
+    // unlinkOrcid() resolves (never rejects) with { ok, message } — a
+    // refused unlink (the account's only login method) is an expected
+    // outcome the user needs to actually see, not a console-only error.
+    _unlinkOrcid() {
+        unlinkOrcid()
+            .then(result => {
+                if (!result.ok) {
+                    alert(result.message || 'Could not unlink ORCID.');
+                    return;
+                }
+                this._checkUser();
+            })
+            .catch(err => console.error('ccg-userstatus ORCID unlinking failed', err));
+    }
+
+    // Same { ok, message } shape as _unlinkOrcid above, for the same reason
+    // — a refused removal (the account's last login method) needs to
+    // actually reach the user, not just the console.
+    _removePasskey(credentialId) {
+        removePasskey(credentialId)
+            .then(result => {
+                if (!result.ok) {
+                    alert(result.message || 'Could not remove passkey.');
+                    return;
+                }
+                this._checkUser();
+            })
+            .catch(err => console.error('ccg-userstatus passkey removal failed', err));
     }
 
 }

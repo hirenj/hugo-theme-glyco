@@ -23,6 +23,19 @@ import MASCP from 'mascp-jstools/MASCP';
 import GatorDataReader from 'mascp-jstools/GatorDataReader';
 MASCP.GatorDataReader = GatorDataReader;
 
+// Passkeys as a fast return-visit login, ORCID required before one can be
+// registered at all (a passkey has no recoverable identity of its own — see
+// ccg-shared-backend's webauthn.mjs) — plans/analytics-passkeys-user-content.md
+// section (b) (glycome repo). @simplewebauthn/browser wraps
+// navigator.credentials.create()/.get()'s
+// base64url<->ArrayBuffer conversions, the same "don't hand-roll the one
+// genuinely fiddly part" reasoning as the backend using
+// @simplewebauthn/server instead of hand-rolling attestation/assertion
+// parsing. A real bundled dependency, not the CDN-script-injection approach
+// used for the throwaway manual spike (spikes/webauthn-cpu-spike/ in
+// ccg-shared-backend) — this is shipped UI, not a one-off test page.
+import { startRegistration, startAuthentication } from '@simplewebauthn/browser';
+
 // GatorDataReader sends this as the x-api-key header on every request (see
 // mascp-jstools/js/lib/Service.js) — ccg-shared-backend's /api/data/latest/*
 // checks it as a Worker-side shared secret (src/lib/dataindex.mjs's
@@ -59,15 +72,41 @@ const LOGOUT_URL = `${process.env.ROOT_API}/api/logout`;
 // GET returns the whole blob, PUT replaces it wholesale (no server-side
 // merge), so setPrefs() below has to read-modify-write.
 const PREFS_URL = `${process.env.ROOT_API}/api/prefs`;
+// UI feature flags (ccg-shared-backend's src/lib/policy.mjs `flag`-type
+// policies) — deliberately identity-optional on the backend (anonymous
+// callers get `{ flags: [] }`, not a 401), so this is safe to call
+// unconditionally rather than gating it behind getLoginStatus() first.
+const FLAGS_URL = `${process.env.ROOT_API}/api/account/flags`;
+// Passkey register/login (src/lib/webauthn.mjs in ccg-shared-backend).
+const REGISTER_OPTIONS_URL = `${process.env.ROOT_API}/api/webauthn/register/options`;
+const REGISTER_VERIFY_URL = `${process.env.ROOT_API}/api/webauthn/register/verify`;
+const LOGIN_OPTIONS_URL = `${process.env.ROOT_API}/api/webauthn/login/options`;
+const LOGIN_VERIFY_URL = `${process.env.ROOT_API}/api/webauthn/login/verify`;
+// ORCID account linking (src/lib/orcid-auth.mjs's handleLinkOrcid/
+// handleUnlinkOrcid) — a thin variant of the LOGIN_URL round trip above,
+// tagged server-side with the current session rather than starting a fresh
+// one; see that file's comments.
+const LINK_ORCID_URL = `${process.env.ROOT_API}/api/account/link-orcid`;
+const UNLINK_ORCID_URL = `${process.env.ROOT_API}/api/account/orcid-link`;
+const PASSKEYS_URL = `${process.env.ROOT_API}/api/account/passkeys`;
 const LAST_ORCID_KEY = 'lastOrcidId';
 
 // Identity is cached in memory only — no localStorage token/profile, unlike the
 // Auth0 path this replaces. The session cookie is httpOnly and inaccessible to
 // JS; that's a deliberate security improvement, not a gap, per the plan.
+// currentUserId is the generic "is anyone logged in" identity (set whenever
+// /api/whoami returns 200, by ANY login method); currentOrcidId is specifically
+// "is this account ORCID-linked" and is null for a passkey-only account with
+// nothing linked yet — mirrors the same two-identity split
+// getSessionIdentity()/getOrcidIdentity() have on the backend (orcid-auth.mjs).
+let currentUserId = null;
 let currentOrcidId = null;
 let currentName = null;
 let currentGivenName = null;
 let currentFamilyName = null;
+// Set only by the dev-only __ccgAuthDebug hook near the bottom of this file
+// — listPasskeys() below checks it first, bypassing the network entirely.
+let debugPasskeysOverride = null;
 
 const ensureApiLogin = () => {
     // Compatibility shim for any code still reading MASCP.GatorDataReader's own
@@ -80,6 +119,7 @@ const ensureApiLogin = () => {
 
 let loginStatusPromise = null;
 let prefsPromise = null;
+let flagsPromise = null;
 
 // Cached the same way getLoginStatus() caches loginStatusPromise — one fetch
 // per login session, not one per caller. Cleared whenever the login/logout
@@ -110,6 +150,25 @@ const setPrefs = (partial) => {
         }).then(() => { prefsPromise = Promise.resolve(merged); }));
 };
 
+// Cached per session like getPrefs()/getLoginStatus(), cleared alongside
+// them on login/logout below. Unlike those two, the endpoint itself works
+// for an anonymous caller too (returns an empty array rather than 401), so
+// this never needs to wait on getLoginStatus() first.
+const getFlags = () => {
+    if (!flagsPromise) {
+        flagsPromise = process.env.SKIP_AUTHENTICATION
+            ? Promise.resolve([])
+            : fetch(FLAGS_URL, { credentials: 'include' })
+                .then(response => response.ok ? response.json() : { flags: [] })
+                .then(body => body.flags ?? [])
+                .catch(err => {
+                    console.log('[auth] getFlags: /api/account/flags unreachable', err);
+                    return [];
+                });
+    }
+    return flagsPromise;
+};
+
 // Reuses the existing SKIP_AUTHENTICATION convention (config/dev.env.js already
 // sets this when ROOT_API isn't configured — previously unconsumed anywhere).
 // Also short-circuits to anonymous on any fetch failure (backend unreachable in
@@ -122,6 +181,7 @@ const getLoginStatus = () => {
             loginStatusPromise = fetch(WHOAMI_URL, { credentials: 'include' })
                 .then(response => {
                     if (!response.ok) {
+                        currentUserId = null;
                         currentOrcidId = null;
                         currentName = null;
                         currentGivenName = null;
@@ -129,18 +189,25 @@ const getLoginStatus = () => {
                         return false;
                     }
                     return response.json().then(body => {
-                        currentOrcidId = body.orcidId;
+                        // userId is what "logged in at all" means now — a
+                        // passkey-only account has orcidId: null but is
+                        // still logged in (section (b)). Keying this on
+                        // orcidId the way it used to be would report such
+                        // an account as logged OUT.
+                        currentUserId = body.userId ?? null;
+                        currentOrcidId = body.orcidId ?? null;
                         currentName = body.name ?? null;
                         currentGivenName = body.givenName ?? null;
                         currentFamilyName = body.familyName ?? null;
                         if (currentOrcidId) {
                             localStorage.setItem(LAST_ORCID_KEY, currentOrcidId);
                         }
-                        return !!currentOrcidId;
+                        return !!currentUserId;
                     });
                 })
                 .catch(err => {
                     console.log('[auth] getLoginStatus: /api/whoami unreachable', err);
+                    currentUserId = null;
                     currentOrcidId = null;
                     currentName = null;
                     currentGivenName = null;
@@ -179,6 +246,12 @@ const setPreferredRenderer = (name) => getLoginStatus().then(loggedIn => {
 
 const getUserId = () => currentOrcidId;
 
+// Explicit alias for new call sites that specifically want "is this account
+// ORCID-linked" (e.g. the linked-accounts UI) rather than the historical
+// getUserId() name, which section (b) doesn't repurpose — see this file's
+// currentUserId/currentOrcidId comment above for why there are now two.
+const getOrcidId = () => currentOrcidId;
+
 // givenName/familyName are populated only via a still-valid pre-cutover
 // Access session (see plans/orcid-self-service-login.md's Phase 2b/4 —
 // ORCID's own token response used by the new login flow returns a single
@@ -212,8 +285,8 @@ const performLogout = () => {
         const popup = window.open(LOGOUT_URL, 'cloudflare-logout', 'width=500,height=600');
         const finish = () => {
             if (popup && !popup.closed) popup.close();
-            loginStatusPromise = null;
-            prefsPromise = null;
+            invalidateSessionCaches();
+            currentUserId = null;
             currentOrcidId = null;
             currentName = null;
             currentGivenName = null;
@@ -261,8 +334,7 @@ const tryLoggingIn = () => {
                 // check already resolved it to "logged out", and without
                 // clearing that cache here this would just return the same
                 // stale answer instead of actually re-checking.
-                loginStatusPromise = null;
-                prefsPromise = null;
+                invalidateSessionCaches();
                 resolve(getLoginStatus());
             }
         }, 500);
@@ -279,6 +351,173 @@ const tryLoggingInRedirect = () => {
     });
 };
 
+// Forces every cached per-session fetch to re-run — needed after anything
+// that changes who's logged in or what's linked (register/login/link/unlink
+// below), same as the existing login/logout code paths above already do by
+// hand in three places each.
+const invalidateSessionCaches = () => {
+    loginStatusPromise = null;
+    prefsPromise = null;
+    flagsPromise = null;
+};
+
+// Registers a new passkey — either a brand-new, passkey-first account (not
+// currently logged in) or a second credential on the already-logged-in
+// account (ccg-shared-backend's webauthn.mjs decides which from the
+// session, not this call). Rejects with whatever error
+// navigator.credentials.create() throws (e.g. the user cancelling the OS
+// prompt, 'NotAllowedError') or a plain Error if the server-side verify step
+// fails — callers already have a .catch(console.error) pattern for the
+// login/logout calls above; this fits the same shape.
+const registerPasskey = () => {
+    return fetch(REGISTER_OPTIONS_URL, { method: 'POST', credentials: 'include' })
+        .then(res => res.json())
+        .then(options => startRegistration({ optionsJSON: options }))
+        .then(attestationResponse => fetch(REGISTER_VERIFY_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(attestationResponse),
+        }))
+        .then(res => {
+            if (!res.ok) throw new Error('Passkey registration could not be verified.');
+            invalidateSessionCaches();
+            return getLoginStatus();
+        });
+};
+
+// Logs in with an existing passkey — discoverable-credential ("usernameless")
+// flow, so there's no identity to supply up front: the OS/browser's own
+// picker surfaces whichever passkey(s) this origin has stored.
+const loginWithPasskey = () => {
+    return fetch(LOGIN_OPTIONS_URL, { method: 'POST', credentials: 'include' })
+        .then(res => res.json())
+        .then(options => startAuthentication({ optionsJSON: options }))
+        .then(assertionResponse => fetch(LOGIN_VERIFY_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(assertionResponse),
+        }))
+        .then(res => {
+            if (!res.ok) throw new Error('Passkey login could not be verified.');
+            invalidateSessionCaches();
+            return getLoginStatus();
+        });
+};
+
+// Links an ORCID iD to the CURRENT account — requires already being logged
+// in (by any method); ccg-shared-backend's handleLinkOrcid 401s otherwise.
+// Same popup-and-poll shape as tryLoggingIn above (and for the same reason:
+// no way to signal completion back across origins except closing the
+// popup), reusing the exact same self-closing /api/whoami?popup page on the
+// success path. A 409 conflict (this ORCID iD already belongs to a
+// different account) lands as a plain-text page IN the popup instead of
+// closing it — a rough edge for now; the popup just needs manually closing,
+// not a broken flow.
+const linkOrcid = () => {
+    return new Promise(resolve => {
+        const popup = window.open(`${LINK_ORCID_URL}?popup`, 'cloudflare-link-orcid', 'width=500,height=600');
+        if (!popup) {
+            window.location.href = LINK_ORCID_URL;
+            return;
+        }
+        const poll = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(poll);
+                invalidateSessionCaches();
+                resolve(getLoginStatus());
+            }
+        }, 500);
+    });
+};
+
+// Removes the ORCID link from the current account. The backend refuses
+// (400) if this is the account's only login method — returns
+// { ok: false, message } in that case rather than throwing, so the caller
+// can show the server's own explanation directly instead of a generic error.
+const unlinkOrcid = () => {
+    return fetch(UNLINK_ORCID_URL, { method: 'DELETE', credentials: 'include' })
+        .then(res => {
+            if (res.ok) {
+                invalidateSessionCaches();
+                return getLoginStatus().then(() => ({ ok: true }));
+            }
+            return res.text().then(message => ({ ok: false, message }));
+        });
+};
+
+// Lists the current account's passkeys — [{ credentialId, transports,
+// createdAt }], oldest first. Lets the linked-accounts UI show what's
+// actually registered (see ccg-shared-backend's handleListPasskeys comment
+// for why this exists: there's no client-side way to check "do I already
+// have a passkey for this site" before registering one, so visibility
+// after the fact is the practical alternative). Not cached like
+// getPrefs()/getFlags() — this list changes exactly when the user adds or
+// removes one via this same UI, so a fresh fetch each time is simpler than
+// another cache to invalidate.
+const listPasskeys = () => {
+    if (debugPasskeysOverride !== null) return Promise.resolve(debugPasskeysOverride);
+    return fetch(PASSKEYS_URL, { credentials: 'include' })
+        .then(res => res.ok ? res.json() : { passkeys: [] })
+        .then(body => body.passkeys ?? []);
+};
+
+// Removes one specific passkey by credential id (from listPasskeys() above).
+// Same { ok, message } shape as unlinkOrcid — the backend refuses (400) to
+// remove an account's last remaining login method.
+const removePasskey = (credentialId) => {
+    return fetch(`${PASSKEYS_URL}/${encodeURIComponent(credentialId)}`, { method: 'DELETE', credentials: 'include' })
+        .then(res => {
+            if (res.ok) return { ok: true };
+            return res.text().then(message => ({ ok: false, message }));
+        });
+};
+
+// Shipped unconditionally, not gated on NODE_ENV — this project's `just
+// build` (what both `deploy-test` and real production use) always sets
+// NODE_ENV=production; there's no separate "test" value to gate on (see
+// config/prod.env.js's own comment), so a NODE_ENV check would strip this
+// from test.glyco.me too, not just real production. That's fine: this hook
+// only ever mutates the CALLING BROWSER's own in-memory rendering state —
+// no network call, no server-side effect — so it's no more a risk shipped
+// to real users than them editing the DOM via devtools themselves, which
+// they can already do regardless. Forces every piece of cached auth state
+// ccg-userstatus.js renders from, so you can click through anonymous /
+// ORCID-linked / passkey-only-unlinked / multiple passkeys / etc. without a
+// real login round trip each time. See the console output below (printed
+// once, at page load) for ready-to-paste examples.
+window.__ccgAuthDebug = {
+    setState({ whoami = null, prefs = {}, flags = [], passkeys = [] } = {}) {
+        currentUserId = whoami?.userId ?? null;
+        currentOrcidId = whoami?.orcidId ?? null;
+        currentName = whoami?.name ?? null;
+        currentGivenName = whoami?.givenName ?? null;
+        currentFamilyName = whoami?.familyName ?? null;
+        loginStatusPromise = Promise.resolve(!!currentUserId);
+        prefsPromise = Promise.resolve(prefs);
+        flagsPromise = Promise.resolve(flags);
+        debugPasskeysOverride = passkeys;
+        document.querySelectorAll('ccg-userstatus').forEach(el => el._checkUser());
+    },
+    // Drops the stubbed state and goes back to real network calls —
+    // call this (or just reload the page) before testing real login.
+    reset() {
+        invalidateSessionCaches();
+        debugPasskeysOverride = null;
+        document.querySelectorAll('ccg-userstatus').forEach(el => el._checkUser());
+    },
+};
+/* eslint-disable no-console */
+console.log('%c[ccg-auth-debug] window.__ccgAuthDebug is available — force <ccg-userstatus> UI states without logging in.', 'color: #888');
+console.log('Examples (paste directly):');
+console.log("  __ccgAuthDebug.setState({ whoami: null }); // anonymous");
+console.log("  __ccgAuthDebug.setState({ whoami: { userId: 'u1', orcidId: '0000-0002-8192-2829', name: 'Ada Lovelace' } }); // ORCID-linked, no passkeys");
+console.log("  __ccgAuthDebug.setState({ whoami: { userId: 'u2', orcidId: null, name: null }, passkeys: [{ credentialId: 'abc', transports: ['internal'], createdAt: Date.now() }] }); // passkey-only, unlinked, 1 passkey");
+console.log("  __ccgAuthDebug.setState({ whoami: { userId: 'u3', orcidId: '0000-0002-8192-2829', name: 'Ada Lovelace' }, passkeys: [{ credentialId: 'a', transports: [], createdAt: Date.now() }, { credentialId: 'b', transports: [], createdAt: Date.now() }] }); // ORCID-linked + 2 passkeys");
+console.log("  __ccgAuthDebug.reset(); // back to real network state");
+/* eslint-enable no-console */
+
 export {
     ensureApiLogin,
     getLoginStatus,
@@ -287,11 +526,19 @@ export {
     getLastUserName,
     clearLastUser,
     getUserId,
+    getOrcidId,
     getUserName,
     getFullName,
     performLogout,
     getPrefs,
     setPrefs,
+    getFlags,
     getPreferredRenderer,
     setPreferredRenderer,
+    registerPasskey,
+    loginWithPasskey,
+    linkOrcid,
+    unlinkOrcid,
+    listPasskeys,
+    removePasskey,
 };
