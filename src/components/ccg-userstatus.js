@@ -137,6 +137,13 @@ function _displayName() {
     return _user;
 }
 
+// Each view/sub-view below is a <template> rather than built node-by-node
+// with createElement() - _tmpl() clones one on demand, _update()'s callers
+// just query into the clone to fill in dynamic text and wire listeners.
+// Nested <template>s inside this outer one parse correctly (HTML's template
+// content model is recursive) and get cloned into every instance's shadow
+// root alongside the style/root span below, same as the rest of this markup
+// already is.
 const tmpl = document.createElement('template');
 tmpl.innerHTML = `
 <style>
@@ -160,18 +167,117 @@ tmpl.innerHTML = `
         overflow: hidden;
         white-space: nowrap;
     }
+    :host([hero]) .usermessage {
+        anchor-name: --user-message;
+    }
+
     :host([hero]) .button_box {
         position: absolute;
+        position-anchor: --user-message;
+        position-area: bottom right;
         display: flex;
         flex-direction: row;
-        flex-wrap: wrap;
-        right: 0;
-        margin-right: 1.5em;
         max-width: 10em;
-        bottom: 1em;
+        width: fit-content;
+        margin-right: 2em;
     }
+
+    button.linked-accounts.glyco {
+        anchor-name: --linked-accounts-button;
+        font-size: 0.5em;
+        position-anchor: --user-message;
+        position: absolute;
+        position-area: bottom left;
+        margin-left: 4em;
+    }
+    #linked-accounts-popover {
+        font-size: 0.75em;
+        position-anchor: --linked-accounts-button;
+        position-area: bottom span-right;
+        margin-top: 0.5em;
+        width: 15em;
+        padding: 0px;
+        overflow: visible;
+        border: 0px;
+        background: transparent;
+    }
+
+    .passkey-list {
+        padding: 0px;
+        list-style-type: none;
+        font-size: 0.5em;
+        font-weight: normal;
+    }
+    .orcid-line {
+        font-size: 0.5em;
+        font-weight: normal;
+    }
+    .orcid-line, .passkey-list li {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+    }
+
 </style>
-<span class="root"></span>`;
+<span class="root"></span>
+
+<template id="compact-loggedin">
+    <span class="username" title="Double-click to pick an accent colour
+Shift+double-click for rainbow
+Alt+double-click to reset to default"></span>
+    <label class="logout" style="cursor: pointer;" >Log out &nbsp;&raquo;</label>
+</template>
+
+<template id="compact-anonymous">
+    <label class="passkey-login" style="cursor:pointer; ">Log in &nbsp;&raquo;</label>
+    <label class="orcid-login" style="margin-left:0.75em;cursor:pointer;">ORCID &nbsp;&raquo;</label>
+</template>
+
+<template id="hero-checking">
+    <p class="checkingUser"></p>
+</template>
+
+<template id="hero-anonymous">
+    <p class="lastuser usermessage"></p>
+    <div class="button_box">
+        <button class="glyco go" type="button">Go &nbsp;&raquo;</button>
+        <button class="glyco orcid-go" type="button">ORCID &nbsp;&raquo;</button>
+    </div>
+</template>
+
+<template id="hero-loggedin">
+    <p class="greeting usermessage"></p>
+    <div class="button_box">
+        <button class="glyco logout" type="button">logout &nbsp;&raquo;</button>
+    </div>
+</template>
+
+
+<template id="linked-accounts">
+    <div class="linked-accounts">
+        <button popovertarget="linked-accounts-popover" class="linked-accounts glyco">Accounts</button>
+
+        <div popover id="linked-accounts-popover">
+            <section class="info_card">
+                <h3>Linked accounts</h3>
+                <div style="display: flex; flex-direction: column; align-items: start; gap: 0.5em;">
+                    <div class="orcid-line"></div>
+                    <div><a href="#" class="glyco add-passkey">Add passkey</a></div>
+                    <ul class="passkey-list"></ul>
+                </div>
+            </section>
+        </div>
+    </div>
+</template>
+
+<template id="orcid-linked"><span>ORCID <span class="orcid-id"></span></span><button class="unlink glyco" style="font-size:0.85em">Unlink</button></template>
+
+<template id="orcid-unlinked"><button class="link glyco">Link ORCID</button></template>
+
+<template id="passkey-item"><li><span class="label"></span> <button class="remove glyco" style="font-size:0.85em">X</button></li></template>
+
+<template id="passkey-empty"><li>No passkeys registered yet.</li></template>
+`;
 
 class CCGUserStatus extends HTMLElement {
 
@@ -193,6 +299,16 @@ class CCGUserStatus extends HTMLElement {
         _instances.delete(this);
     }
 
+    // Clones one of the <template id="..."> fragments above. Returns the
+    // DocumentFragment itself (not unwrapped) - callers with a single root
+    // element in their template grab it via .firstElementChild when they
+    // need the element itself (e.g. to return it, or insert more into a
+    // list); callers whose template is multiple sibling nodes just
+    // appendChild() the whole fragment, which moves all of them at once.
+    _tmpl(id) {
+        return this.shadowRoot.getElementById(id).content.cloneNode(true);
+    }
+
     _update() {
         this._root.innerHTML = '';
         if (this.hasAttribute('hero')) {
@@ -204,98 +320,64 @@ class CCGUserStatus extends HTMLElement {
 
     _renderCompact() {
         if (_user !== 'anonymous') {
-            // Plain <span>, not <label>: a <label> wrapping a <button> (a
-            // labelable element) forwards every click on the label — including
-            // each half of a double-click on the username — straight to the
-            // button, logging the user out while they're trying to open the
-            // colour picker. There's no actual form control being labelled
-            // here, so there's no semantic reason for it to be a <label>.
-            const label = document.createElement('span');
-            const name = document.createElement('span');
-            name.className = 'username';
-            name.textContent = _user;
-            name.title = 'Double-click to pick an accent colour\nShift+double-click for rainbow\nAlt+double-click to reset to default';
+            // #compact-loggedin's .username is a plain <span>, not a <label>:
+            // a <label> wrapping a <button> (a labelable element) forwards
+            // every click on the label — including each half of a
+            // double-click on the username — straight to the button,
+            // logging the user out while they're trying to open the colour
+            // picker. There's no actual form control being labelled here, so
+            // there's no semantic reason for it to be a <label>.
+            const frag = this._tmpl('compact-loggedin');
+            const name = frag.querySelector('.username');
+            name.textContent = _displayName();
             name.addEventListener('dblclick', event => this._openColorPicker(event));
-            const btn = document.createElement('button');
-            btn.className = 'glyco';
-            btn.innerHTML = 'Log out &nbsp;&raquo;';
-            btn.addEventListener('click', () => this._logout());
-            label.appendChild(name);
-            label.appendChild(btn);
-            this._root.appendChild(label);
+            frag.querySelector('.logout').addEventListener('click', () => this._logout());
+            this._root.appendChild(frag);
         } else {
             // Passkey is the primary action now (section (b) — "passkeys as
             // primary login, ORCID linkable"); the old ORCID popup moves to
             // a smaller secondary link rather than disappearing — some
             // visitors won't have a passkey registered yet and need a way
             // in regardless.
-            const label = document.createElement('label');
-            label.style.cursor = 'pointer';
-            label.innerHTML = 'Log in &nbsp;&raquo;';
-            label.addEventListener('click', () => this._loginWithPasskey());
-            const orcidLink = document.createElement('a');
-            orcidLink.href = '#';
-            orcidLink.style.marginLeft = '0.75em';
-            orcidLink.style.fontSize = '0.85em';
-            orcidLink.textContent = 'or sign in with ORCID';
-            orcidLink.addEventListener('click', event => {
+            const frag = this._tmpl('compact-anonymous');
+            frag.querySelector('.passkey-login').addEventListener('click', () => this._loginWithPasskey());
+            frag.querySelector('.orcid-login').addEventListener('click', event => {
                 event.preventDefault();
                 this._loginWithOrcid();
             });
-            this._root.appendChild(label);
-            this._root.appendChild(orcidLink);
+            this._root.appendChild(frag);
         }
     }
 
     _renderHero() {
         if (_checking) {
-            const p = document.createElement('p');
-            p.className = 'checkingUser';
-            p.textContent = `Logging in as ${getLastUserName() || 'anonymous'}`;
-            this._root.appendChild(p);
+            const frag = this._tmpl('hero-checking');
+            frag.querySelector('.checkingUser').textContent = `Logging in as ${getLastUserName() || 'anonymous'}`;
+            this._root.appendChild(frag);
             return;
         }
         if (_user === 'anonymous') {
             const lastUser = getLastUserName();
-            const p = document.createElement('p');
-            p.innerHTML = lastUser
+            const frag = this._tmpl('hero-anonymous');
+            frag.querySelector('.lastuser').innerHTML = lastUser
                 ? `Log in as <br/> ${lastUser}`
-                : 'Log in using <br/>a passkey';
-            const box = document.createElement('div');
-            box.className = 'button_box';
-            const go = document.createElement('button');
-            go.className = 'glyco';
-            go.innerHTML = 'Go &nbsp;&raquo;';
-            go.addEventListener('click', () => this._loginWithPasskey());
-            box.appendChild(go);
-
-            const orcidGo = document.createElement('button');
-            orcidGo.className = 'glyco';
-            orcidGo.innerHTML = 'ORCID &nbsp;&raquo;';
-            orcidGo.addEventListener('click', event => {
+                : 'Log in using <br/>a passkey or ORCID';
+            frag.querySelector('.go').addEventListener('click', () => this._loginWithPasskey());
+            frag.querySelector('.orcid-go').addEventListener('click', event => {
                 event.preventDefault();
                 this._loginWithOrcid();
             });
-            box.appendChild(orcidGo);
             // "Log in as another user" hidden for now — it can't actually force a
             // different ORCID identity chooser. ORCID keeps its own independent
             // browser session, and Access has no config to override that, so this
             // only ever misleadingly implied a capability we don't have.
-            this._root.appendChild(p);
-            this._root.appendChild(box);
+            this._root.appendChild(frag);
             return;
         }
-        const p = document.createElement('p');
-        p.textContent = `Hi ${_displayName()}`;
-        const box = document.createElement('div');
-        box.className = 'button_box';
-        const btn = document.createElement('button');
-        btn.className = 'glyco';
-        btn.innerHTML = 'logout &nbsp;&raquo;';
-        btn.addEventListener('click', () => this._logout());
-        box.appendChild(btn);
-        this._root.appendChild(p);
-        this._root.appendChild(box);
+        const frag = this._tmpl('hero-loggedin');
+        frag.querySelector('.greeting').textContent = `Hi ${_displayName()}`;
+        frag.querySelector('.logout').addEventListener('click', () => this._logout());
+        this._root.appendChild(frag);
         this._root.appendChild(this._renderLinkedAccounts());
     }
 
@@ -306,43 +388,30 @@ class CCGUserStatus extends HTMLElement {
     // not the compact navbar one — there's no room there and it's not a
     // frequent action.
     _renderLinkedAccounts() {
-        const box = document.createElement('div');
-        box.className = 'linked-accounts';
+        const box = this._tmpl('linked-accounts').firstElementChild;
         const orcidId = getOrcidId();
-        const orcidP = document.createElement('p');
+        const orcidLine = box.querySelector('.orcid-line');
         if (orcidId) {
-            orcidP.textContent = `ORCID: ${orcidId} `;
-            const unlink = document.createElement('a');
-            unlink.href = '#';
-            unlink.style.fontSize = '0.85em';
-            unlink.textContent = '(unlink)';
-            unlink.addEventListener('click', event => {
+            const linked = this._tmpl('orcid-linked');
+            linked.querySelector('.orcid-id').textContent = orcidId;
+            linked.querySelector('.unlink').addEventListener('click', event => {
                 event.preventDefault();
                 this._unlinkOrcid();
             });
-            orcidP.appendChild(unlink);
+            orcidLine.appendChild(linked);
         } else {
-            const link = document.createElement('a');
-            link.href = '#';
-            link.textContent = 'Link an ORCID iD to this account';
-            link.addEventListener('click', event => {
+            const unlinked = this._tmpl('orcid-unlinked');
+            unlinked.querySelector('.link').addEventListener('click', event => {
                 event.preventDefault();
                 this._linkOrcid();
             });
-            orcidP.appendChild(link);
+            orcidLine.appendChild(unlinked);
         }
-        box.appendChild(orcidP);
 
-        const passkeyP = document.createElement('p');
-        const addPasskey = document.createElement('a');
-        addPasskey.href = '#';
-        addPasskey.textContent = 'Add a passkey for this device';
-        addPasskey.addEventListener('click', event => {
+        box.querySelector('.add-passkey').addEventListener('click', event => {
             event.preventDefault();
             this._addPasskey();
         });
-        passkeyP.appendChild(addPasskey);
-        box.appendChild(passkeyP);
 
         // Visibility into what's actually registered — there's no reliable
         // way to ask WebAuthn itself "does this device already have a
@@ -355,29 +424,20 @@ class CCGUserStatus extends HTMLElement {
         // Fetched async and filled in after `box` is already returned/
         // appended — the `passkeyList` reference stays valid regardless of
         // insertion order.
-        const passkeyList = document.createElement('ul');
-        passkeyList.className = 'passkey-list';
-        box.appendChild(passkeyList);
+        const passkeyList = box.querySelector('.passkey-list');
         listPasskeys().then(passkeys => {
             passkeyList.innerHTML = '';
             if (passkeys.length === 0) {
-                const li = document.createElement('li');
-                li.textContent = 'No passkeys registered yet.';
-                passkeyList.appendChild(li);
+                passkeyList.appendChild(this._tmpl('passkey-empty'));
                 return;
             }
             passkeys.forEach(pk => {
-                const li = document.createElement('li');
-                li.textContent = `Passkey added ${new Date(pk.createdAt).toLocaleDateString()} `;
-                const remove = document.createElement('a');
-                remove.href = '#';
-                remove.style.fontSize = '0.85em';
-                remove.textContent = '(remove)';
-                remove.addEventListener('click', event => {
+                const li = this._tmpl('passkey-item').firstElementChild;
+                li.querySelector('.label').textContent = `Passkey added ${new Date(pk.createdAt).toLocaleDateString()} `;
+                li.querySelector('.remove').addEventListener('click', event => {
                     event.preventDefault();
                     this._removePasskey(pk.credentialId);
                 });
-                li.appendChild(remove);
                 passkeyList.appendChild(li);
             });
         }).catch(err => console.error('ccg-userstatus listPasskeys failed', err));

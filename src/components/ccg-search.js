@@ -339,7 +339,13 @@ class CCGSearch extends HTMLElement {
         this._input.addEventListener('focus', () => { if (this._options.length === 0) this._render(); });
         this._input.addEventListener('blur', () => { if (this._options.length === 0) this._render(); });
         this._reset.addEventListener('click', () => {
+            // The browser's native form-reset only clears the input value
+            // as a default action AFTER this click listener returns, so
+            // doing it ourselves here avoids _render() (called below, then
+            // again on focus) seeing the stale pre-reset text.
+            this._input.value = '';
             this._options = [];
+            this._searchDirty = false;
             this._render();
             this._input.focus();
         });
