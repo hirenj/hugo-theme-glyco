@@ -18,7 +18,7 @@
         <a class="home" title="Home" href="{{ "/" | relURL }}">Home</a>
       {{ end }}
     </label></li>
-    <li class="mobiletoggle"><label><ccg-userstatus/></label></li>
+    <li class="mobiletoggle"><label><ccg-userstatus settings-url="{{ with .Site.Params.settings_url }}{{ . | relURL }}{{ end }}"/></label></li>
       {{ $currentPage := . }}
       {{ $scratch := newScratch }}
 

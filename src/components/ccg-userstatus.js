@@ -2,97 +2,22 @@ import { tryLoggingIn, getLoginStatus, performLogout, ensureApiLogin, getUserId,
          getFullName, getLastUserName, getPrefs, setPrefs, getFlags,
          loginWithPasskey, registerPasskey, linkOrcid, unlinkOrcid, listPasskeys, removePasskey }
     from '../js/auth/cloudflare.js';
+import { DEFAULT_HUE, DEFAULT_SAT, DEFAULT_LUM, RAINBOW, hexFromHSL, applyColor, clearColorProps }
+    from '../js/accent-color.js';
 
 import { glycoStyles } from 'ccg-shared-elements/styles';
-
-const DEFAULT_HUE = 170;
-// Only used to seed the native colour input when nothing is in effect yet —
-// --base-saturation/--base-lum themselves are never defaulted: see
-// _applyColor, which removes rather than sets them when there's no stored
-// colour, leaving the theme's own derived values in place.
-const DEFAULT_SAT = 100;
-const DEFAULT_LUM = 50;
-const RAINBOW = 'rainbow';
 
 let _user = 'anonymous';
 let _checking = true;
 const _instances = new Set();
 
-// Full hex -> HSL, so the picker can round-trip the user's exact colour
-// (hue, saturation and lightness are all stored/applied independently).
-function hslFromHex(hex) {
-    if (typeof hex !== 'string' || !/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
-    const r = parseInt(hex.slice(1, 3), 16) / 255;
-    const g = parseInt(hex.slice(3, 5), 16) / 255;
-    const b = parseInt(hex.slice(5, 7), 16) / 255;
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    const l = (max + min) / 2;
-    if (max === min) return { h: 0, s: 0, l: Math.round(l * 100) };
-    const d = max - min;
-    const s = d / (1 - Math.abs(2 * l - 1));
-    let h;
-    switch (max) {
-        case r: h = ((g - b) / d) % 6; break;
-        case g: h = (b - r) / d + 2; break;
-        default: h = (r - g) / d + 4; break;
-    }
-    h *= 60;
-    if (h < 0) h += 360;
-    return { h, s: Math.round(s * 100), l: Math.round(l * 100) };
-}
-
-// The reverse of hslFromHex — used to seed the native colour input from
-// whichever of hue/saturation/lightness are currently in effect.
-function hexFromHSL(h, s, l) {
-    s /= 100; l /= 100;
-    const c = (1 - Math.abs(2 * l - 1)) * s;
-    const x = c * (1 - Math.abs(((h / 60) % 2) - 1));
-    const m = l - c / 2;
-    let [r, g, b] = [0, 0, 0];
-    if (h < 60) [r, g, b] = [c, x, 0];
-    else if (h < 120) [r, g, b] = [x, c, 0];
-    else if (h < 180) [r, g, b] = [0, c, x];
-    else if (h < 240) [r, g, b] = [0, x, c];
-    else if (h < 300) [r, g, b] = [x, 0, c];
-    else [r, g, b] = [c, 0, x];
-    const toHex = v => Math.round((v + m) * 255).toString(16).padStart(2, '0');
-    return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
-}
-
-function _clearColorProps() {
-    document.documentElement.style.removeProperty('--base-hue');
-    document.documentElement.style.removeProperty('--base-saturation');
-    document.documentElement.style.removeProperty('--base-lum');
-}
-
-function _applyColor(color) {
-    if (color === RAINBOW) {
-        _clearColorProps();
-        document.documentElement.setAttribute(RAINBOW, '');
-    } else {
-        document.documentElement.removeAttribute(RAINBOW);
-        const hsl = hslFromHex(color);
-        // Hue alone falls back to DEFAULT_HUE to match prior behaviour;
-        // saturation/lum are never defaulted — an invalid/missing colour
-        // just clears them so the theme's own values show through.
-        document.documentElement.style.setProperty('--base-hue', hsl?.h ?? DEFAULT_HUE);
-        if (hsl) {
-            document.documentElement.style.setProperty('--base-saturation', `${hsl.s}%`);
-            document.documentElement.style.setProperty('--base-lum', `${hsl.l}%`);
-        } else {
-            document.documentElement.style.removeProperty('--base-saturation');
-            document.documentElement.style.removeProperty('--base-lum');
-        }
-    }
-}
-
 function _setUser(user, color) {
     _user = user;
     if (user !== 'anonymous') {
-        _applyColor(color);
+        applyColor(color);
         document.body.setAttribute('data-authenticated', '');
     } else {
-        _clearColorProps();
+        clearColorProps();
         document.documentElement.removeAttribute(RAINBOW);
         document.body.removeAttribute('data-authenticated');
     }
@@ -222,7 +147,8 @@ tmpl.innerHTML = `
 <span class="root"></span>
 
 <template id="compact-loggedin">
-    <span class="username" title="Double-click to pick an accent colour
+    <span class="username" title="Click for settings
+Double-click to pick an accent colour
 Shift+double-click for rainbow
 Alt+double-click to reset to default"></span>
     <label class="logout" style="cursor: pointer;" >Log out &nbsp;&raquo;</label>
@@ -330,7 +256,24 @@ class CCGUserStatus extends HTMLElement {
             const frag = this._tmpl('compact-loggedin');
             const name = frag.querySelector('.username');
             name.textContent = _displayName();
-            name.addEventListener('dblclick', event => this._openColorPicker(event));
+            // Single click navigates to settings; double-click opens the
+            // colour picker. A click's `detail` is 1 for the first click of
+            // either gesture, so the single-click action is held back just
+            // long enough (the platform double-click interval) for a
+            // following dblclick to cancel it — otherwise every double-click
+            // would also fire a navigation on its first half.
+            name.addEventListener('click', () => {
+                if (this._settingsClickTimer) return;
+                this._settingsClickTimer = setTimeout(() => {
+                    this._settingsClickTimer = null;
+                    this._goToSettings();
+                }, 300);
+            });
+            name.addEventListener('dblclick', event => {
+                clearTimeout(this._settingsClickTimer);
+                this._settingsClickTimer = null;
+                this._openColorPicker(event);
+            });
             frag.querySelector('.logout').addEventListener('click', () => this._logout());
             this._root.appendChild(frag);
         } else {
@@ -483,7 +426,7 @@ class CCGUserStatus extends HTMLElement {
                 pointerEvents: 'none',
             });
             this._colorInputEl.addEventListener('change', () => {
-                _applyColor(this._colorInputEl.value);
+                applyColor(this._colorInputEl.value);
                 setPrefs({ color: this._colorInputEl.value })
                     .catch(err => console.error('ccg-userstatus setPrefs failed', err));
             });
@@ -495,17 +438,17 @@ class CCGUserStatus extends HTMLElement {
     _openColorPicker(event) {
         if (event.altKey) {
             // null (not omitting the field) explicitly clears a previously
-            // stored colour/rainbow preference — _applyColor(null) falls
+            // stored colour/rainbow preference — applyColor(null) falls
             // through to DEFAULT_HUE the same way "never set" does.
             setPrefs({ color: null })
                 .catch(err => console.error('ccg-userstatus setPrefs failed', err));
-            _applyColor(null);
+            applyColor(null);
             return;
         }
         if (event.shiftKey) {
             setPrefs({ color: RAINBOW })
                 .catch(err => console.error('ccg-userstatus setPrefs failed', err));
-            _applyColor(RAINBOW);
+            applyColor(RAINBOW);
             return;
         }
         const input = this._colorInput();
@@ -519,6 +462,16 @@ class CCGUserStatus extends HTMLElement {
             Number.isFinite(currentLum) ? currentLum : DEFAULT_LUM
         );
         input.click();
+    }
+
+    // settings-url is set by the Hugo template instantiating this element
+    // (e.g. `<ccg-userstatus settings-url="/settings/">`) since the right
+    // path is site-specific; left unset, a click is simply a no-op rather
+    // than guessing a path that might not exist on every site embedding
+    // this theme.
+    _goToSettings() {
+        const url = this.getAttribute('settings-url');
+        if (url) window.location.href = url;
     }
 
     _logout() {
