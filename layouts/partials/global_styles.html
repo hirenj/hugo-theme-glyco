@@ -15,6 +15,21 @@
   /* Data tables (ccg-result-table, used by both ccg-variant-table and
      ccg-msdata-table) — set once here rather than per table instance. */
   --data-table-font-family: Helvetica, Verdana, Arial, sans-serif;
-  --data-table-font-size: 11pt;
+  --data-table-font-size: var(--font-table);
+
+  /* Font-size scale, relative to the page's base size (<html>, i.e. the
+     browser default or the user's own text-size setting) rather than to
+     whatever an element happens to be nested in. Values match the old
+     fixed sizes at the default 16px base. Components use them with a
+     fallback - var(--font-sm, 0.6875rem) - so they also work without this
+     partial (e.g. in a component gallery). Inherits into shadow roots;
+     don't define these in glycosuite.css, whose :root matches nothing
+     when adopted into a shadow root. */
+  --font-xs: 0.5625rem;      /* 9px */
+  --font-sm: 0.6875rem;      /* 11px: buttons, inline controls */
+  --font-ui: 0.75rem;        /* 12px (9pt): menus, slider labels */
+  --font-control: 0.83333rem; /* 13.33px (10pt): browser default for form controls */
+  --font-table: 0.91667rem;  /* 14.67px (11pt): data tables */
+  --font-base: 1rem;
 }
 </style>

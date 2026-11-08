@@ -241,7 +241,8 @@ div.noresults {
         height: 1.5em;
     }
     input[type=search] {
-        font-size: 16px;
+        /* iOS zooms into inputs under 16px: scale with the base, never below. */
+        font-size: max(16px, 1rem);
         top: 0px;
     }
 }

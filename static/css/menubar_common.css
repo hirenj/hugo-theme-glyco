@@ -9,7 +9,7 @@ section.menu {
   display: block;
   position: relative;
   width: 100%;
-  --menu-font: 9pt;
+  --menu-font: var(--font-ui, 0.75rem);
   --menu-height: calc( var(--menu-font) * 1.25 + 6px);
   --submenu-height: calc( var(--menu-font) * 1.25 + 6px + 1em);
   --menu-item-width: 155px;
@@ -347,7 +347,7 @@ section.menu > ul > li:not([class*="menuitem"]).mobiletoggle {
   and (-webkit-min-device-pixel-ratio: 2) {
 
   section.menu * {
-    --menu-font: 9pt;
+    --menu-font: var(--font-ui, 0.75rem);
     font-weight: normal;
     --submenu-height: calc( var(--menu-font) * 2 + 6px);
   }
