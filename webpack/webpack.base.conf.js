@@ -94,19 +94,12 @@ module.exports = {
   },
   module: {
     rules: [
-    // glycosuite.css is excluded here and raw-loaded below instead: it's not
-    // a component's scoped style, it's imported as plain text by
+    // glycosuite.css is imported as plain text by
     // js/components/ccg-styles.js (`glycoStyles.replaceSync(css_data)`) to
     // build a constructable stylesheet adopted into ccg-userstatus's shadow
-    // root. Fed through style-loader/css-loader instead, `css_data`
-    // comes back as whatever module shape css-loader produces rather than a
-    // plain string, so replaceSync() gets the wrong input and the shadow
-    // root ends up with no (or broken) styles — no build error, just a
-    // silently unstyled/misstyled <ccg-userstatus>. (The symlinked
-    // ccg-shared-elements/ path also resolves outside node_modules/ once
-    // webpack follows the symlink, so `exclude: /node_modules/` below
-    // wouldn't have caught it anyway.)
-    { test: /\.css$/, exclude: [/node_modules/, /glycosuite\.css$/], use: ['style-loader', { loader: 'css-loader', options: { esModule: false } }]},
+    // root — raw-loader gives it back as a plain string, which is what
+    // replaceSync() needs; css-loader would give back whatever module shape
+    // it produces instead, silently leaving <ccg-userstatus> unstyled.
     {
       test: /glycosuite\.css$/,
       use: 'raw-loader'
