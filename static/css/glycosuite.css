@@ -319,8 +319,9 @@ h4 {
   font-size: 0.9em;
 }
 
+/* No font-size here: external links size like any a.glyco (1em - 0.125rem),
+   so the two match side by side. The icon below is em-sized and follows. */
 a[target='_blank'].glyco, a[target='_blank'].glyco:hover {
-  font-size: var(--font-sm, 0.6875rem);
   text-decoration: none;
 }
 
