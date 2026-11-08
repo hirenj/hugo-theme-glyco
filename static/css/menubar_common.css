@@ -399,8 +399,11 @@ section.menu > ul > li:not([class*="menuitem"]).mobiletoggle {
     max-height: 0px;
   }
 
+  /* Cap only exists for the open/close transition. An open submenu
+     (header + items at --submenu-height each) must fit under it at any
+     text size, or its last item overlaps the next entry. */
   section.menu > input[type="checkbox"]:checked ~ ul > li {
-    max-height: calc( 10 * var(--menu-height) );
+    max-height: calc( 20 * var(--menu-height) );
   }
 
   section.menu ul input[type="checkbox"] ~ ul li {
