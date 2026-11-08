@@ -285,11 +285,28 @@ button[disabled].glyco, button[disabled].glyco:before, button[disabled].glyco:af
   background: var(--disabled-main-color);
 }
 
+/* Adjacent glyco elements join into one pill: the later one drops its
+   start-side margin, and the end caps that meet are squared off. The margin
+   is logical (inline-start), so it is the right one in RTL too. */
 :is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco) {
-  margin-left: 0px;
+  margin-inline-start: 0px;
 }
 :is(a.glyco, button.glyco, div.glyco):has( + :is(a.glyco, button.glyco, div.glyco)):after,
 :is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco):before {
+  border-radius: 0px;
+}
+/* In RTL the caps that meet are the other way round (:before is still the
+   physical left cap, :after the right one): put back the rounding the rule
+   above removed, then square the caps that do meet. Browsers without
+   :dir() just keep the LTR corners. */
+:is(a.glyco, button.glyco, div.glyco):dir(rtl):has( + :is(a.glyco, button.glyco, div.glyco)):after {
+  border-radius: 0 var(--glyco-button-radius,5px) var(--glyco-button-radius,5px) 0;
+}
+:is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco):dir(rtl):before {
+  border-radius: var(--glyco-button-radius,5px) 0 0 var(--glyco-button-radius,5px);
+}
+:is(a.glyco, button.glyco, div.glyco):dir(rtl):has( + :is(a.glyco, button.glyco, div.glyco)):before,
+:is(a.glyco, button.glyco, div.glyco) + :is(a.glyco, button.glyco, div.glyco):dir(rtl):after {
   border-radius: 0px;
 }
 
