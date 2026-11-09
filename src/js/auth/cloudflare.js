@@ -89,6 +89,11 @@ const LOGIN_VERIFY_URL = `${process.env.ROOT_API}/api/webauthn/login/verify`;
 const LINK_ORCID_URL = `${process.env.ROOT_API}/api/account/link-orcid`;
 const UNLINK_ORCID_URL = `${process.env.ROOT_API}/api/account/orcid-link`;
 const PASSKEYS_URL = `${process.env.ROOT_API}/api/account/passkeys`;
+// User-uploaded content (src/lib/usercontent.mjs in ccg-shared-backend) —
+// plans/analytics-passkeys-user-content.md section (c) / glycome's
+// plans/mydata-datasets-consolidation.md Phase 1.
+const USERCONTENT_UPLOAD_URL = `${process.env.ROOT_API}/api/usercontent`;
+const USERCONTENT_LIST_URL = `${process.env.ROOT_API}/api/account/usercontent`;
 const LAST_ORCID_KEY = 'lastOrcidId';
 
 // Identity is cached in memory only — no localStorage token/profile, unlike the
@@ -474,6 +479,53 @@ const removePasskey = (credentialId) => {
         });
 };
 
+// Lists the current account's uploaded content —
+// [{id, contentType, sizeBytes, label, createdAt}], oldest first, plus the
+// account's current usedBytes/quotaBytes (same two numbers an over-quota
+// upload's 413 body carries). Not cached — "My uploads" wants a fresh view
+// every time it's shown (a delete/upload from another tab should be visible
+// on next load), and this isn't on any hot path the way getPrefs()/getFlags()
+// are (those run on every page's ccg-userstatus mount; this only runs on the
+// My Data page).
+const listUserContent = () => {
+    return fetch(USERCONTENT_LIST_URL, { credentials: 'include' })
+        .then(res => res.ok ? res.json() : { content: [], usedBytes: 0, quotaBytes: 0 });
+};
+
+// Uploads one file's raw bytes with its own Content-Type (not JSON — the
+// body IS the upload). `label` is optional, carried as a query param since
+// there's no JSON body to put it in (see usercontent.mjs's handleUpload);
+// omit it (or pass '') to store an unlabeled object. Resolves to
+// { id, url } on success; rejects with the parsed 413 body
+// ({ error: 'quota_exceeded', usedBytes, quotaBytes }) when the upload would
+// exceed the account's quota, so callers can show a specific message rather
+// than a generic failure.
+const uploadUserContent = (file, label = '') => {
+    const url = label ? `${USERCONTENT_UPLOAD_URL}?label=${encodeURIComponent(label)}` : USERCONTENT_UPLOAD_URL;
+    return fetch(url, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': file.type || 'application/octet-stream' },
+        body: file,
+    }).then(res => {
+        if (res.status === 413) return res.json().then(body => { throw body; });
+        if (!res.ok) throw new Error(`Upload failed (${res.status}).`);
+        return res.json();
+    });
+};
+
+// Removes one uploaded object by id. Resolves on success (204); the backend
+// 404s for an id that doesn't exist or isn't the caller's own — surfaced as
+// a thrown Error rather than a silent no-op, since "someone else's id" vs.
+// "already deleted" both collapse to the same response and either is worth
+// a visible failure rather than pretending it worked.
+const deleteUserContent = (id) => {
+    return fetch(`${USERCONTENT_LIST_URL}/${encodeURIComponent(id)}`, { method: 'DELETE', credentials: 'include' })
+        .then(res => {
+            if (!res.ok) throw new Error(`Could not delete ${id} (${res.status}).`);
+        });
+};
+
 // Shipped unconditionally, not gated on NODE_ENV — this project's `just
 // build` (what both `deploy-test` and real production use) always sets
 // NODE_ENV=production; there's no separate "test" value to gate on (see
@@ -541,4 +593,7 @@ export {
     unlinkOrcid,
     listPasskeys,
     removePasskey,
+    listUserContent,
+    uploadUserContent,
+    deleteUserContent,
 };
