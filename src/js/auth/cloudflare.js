@@ -94,6 +94,10 @@ const PASSKEYS_URL = `${process.env.ROOT_API}/api/account/passkeys`;
 // plans/mydata-datasets-consolidation.md Phase 1.
 const USERCONTENT_UPLOAD_URL = `${process.env.ROOT_API}/api/usercontent`;
 const USERCONTENT_LIST_URL = `${process.env.ROOT_API}/api/account/usercontent`;
+// Curated platform dataset listing (src/lib/dataindex.mjs's
+// serveDataCatalog in ccg-shared-backend) — glycome's
+// plans/mydata-datasets-consolidation.md Phase 4b.
+const DATA_CATALOG_URL = `${process.env.ROOT_API}/api/data/catalog`;
 const LAST_ORCID_KEY = 'lastOrcidId';
 
 // Identity is cached in memory only — no localStorage token/profile, unlike the
@@ -526,6 +530,25 @@ const deleteUserContent = (id) => {
         });
 };
 
+// Lists the curated platform datasets (msdata, glycopacity, etc.) —
+// [{dataset, title, accessGroup?, doi?, tags?}, ...], already filtered
+// server-side to whatever the caller is authorized to even know exists
+// (serveDataCatalog). Gated by the same x-api-key shared secret
+// GatorDataReader sends on every /api/data/latest request (see this file's
+// MASCP.GATOR_CLIENT_ID assignment above) rather than a session cookie —
+// this endpoint doesn't need login to work, only to see restricted entries,
+// which the server-side filtering already handles via whatever session
+// cookie the browser sends alongside it anyway. Not cached client-side
+// either, matching the server's own no-cache policy for the same reason.
+const getDataCatalog = () => {
+    return fetch(DATA_CATALOG_URL, { credentials: 'include', headers: { 'x-api-key': MASCP.GATOR_CLIENT_ID } })
+        .then(res => res.ok ? res.json() : [])
+        .catch(err => {
+            console.log('[auth] getDataCatalog: /api/data/catalog unreachable', err);
+            return [];
+        });
+};
+
 // Shipped unconditionally, not gated on NODE_ENV — this project's `just
 // build` (what both `deploy-test` and real production use) always sets
 // NODE_ENV=production; there's no separate "test" value to gate on (see
@@ -596,4 +619,5 @@ export {
     listUserContent,
     uploadUserContent,
     deleteUserContent,
+    getDataCatalog,
 };
