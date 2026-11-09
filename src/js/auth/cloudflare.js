@@ -518,6 +518,22 @@ const uploadUserContent = (file, label = '') => {
     });
 };
 
+// Mints a fresh, working URL for an object the caller already uploaded —
+// listUserContent()'s own response has no fetchable URL at all (only
+// uploadUserContent()'s does, minted once at upload time). Needed by any
+// later consumer that wants to re-read an upload's content (e.g.
+// glycodomain.js resolving an uploaded region-list dataset — see
+// plans/mydata-datasets-consolidation.md Phase 5, glycome repo). Resolves to
+// { url }; the backend 404s the same way deleteUserContent does for an id
+// that doesn't exist or isn't the caller's own.
+const getUserContentUrl = (id) => {
+    return fetch(`${USERCONTENT_LIST_URL}/${encodeURIComponent(id)}/url`, { credentials: 'include' })
+        .then(res => {
+            if (!res.ok) throw new Error(`Could not get a URL for ${id} (${res.status}).`);
+            return res.json();
+        });
+};
+
 // Removes one uploaded object by id. Resolves on success (204); the backend
 // 404s for an id that doesn't exist or isn't the caller's own — surfaced as
 // a thrown Error rather than a silent no-op, since "someone else's id" vs.
@@ -618,6 +634,7 @@ export {
     removePasskey,
     listUserContent,
     uploadUserContent,
+    getUserContentUrl,
     deleteUserContent,
     getDataCatalog,
 };
