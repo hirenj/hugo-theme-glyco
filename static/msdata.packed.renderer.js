@@ -71,12 +71,32 @@ intervals.sort(function(a,b) {
 	}
 });
 
-var guess_composition = function(composition) {
+// Glycosaminoglycan linker tetrasaccharide (Xyl-Gal-Gal-GlcA, see
+// ccg-data-schemas/glycan-classes.json GAG/CS/HS/KS). Composition shorthand
+// alone can't tell a GalNAc (CS/DS) cap from a GlcNAc (HS/heparin) cap —
+// both collapse to the same HexNAc count — so this picks a structure using
+// the glycan class id in `inferred` instead, when we have one. HS/KS don't
+// have a rendered structure yet, so they fall back to the generic one.
+var GAG_STRUCTURE = 'hexnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl';
+var CS_STRUCTURE = 'galnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl';
+
+var is_gag_linker = function(lookup) {
+	return (lookup['HexA'] || 0) >= 1 && (lookup['Pent'] || 0) >= 1;
+};
+
+var gag_structure_for = function(inferred) {
+	return (inferred || []).indexOf('CS') >= 0 ? CS_STRUCTURE : GAG_STRUCTURE;
+};
+
+var guess_composition = function(composition,inferred) {
 	if (Array.isArray(composition)) {
 		composition = composition[0] || '';
 	}
 	var comp_string = composition.replace(/\d+x/g,'').toLowerCase();
 	let sugar;
+	if (is_gag_linker(composition_to_lookup(composition))) {
+		sugar = '#sugarrendered_' + gag_structure_for(inferred);
+	}
 	if (comp_string == 'hexhexnac') {
 		// comp_string has already had its counts stripped, so a small
 		// "1x Hex + 1x HexNAc" core and a much bigger "6x Hex + 2x HexNAc"
@@ -145,6 +165,8 @@ var render_peptide = function(peptide) {
 
 	if ( ( ! peptide.sites || peptide.sites.length == 0 ) && peptide.composition) {
 		let { sugar, count } = guess_composition(peptide.composition);
+		// (whole-peptide composition entries have no `inferred` glycan class
+		// list to disambiguate CS from the generic GAG rendering)
 		var peptide_key = peptide.start + '-' + peptide.end + sugar;
 		if ( seen_sites[ peptide_key ] ) {
 			return;
@@ -170,7 +192,7 @@ var render_peptide = function(peptide) {
 		if (isNaN(mid)) return;
 
 		if (asite.observed && DEAMIDATED.indexOf(asite.observed) < 0) {
-			let { sugar, count } = guess_composition(asite.observed);
+			let { sugar, count } = guess_composition(asite.observed,asite.inferred);
 			if (! sugar) sugar = asite.observed;
 			var amb_key = 'amb:' + first + '-' + last + sugar;
 			if (seen_sites[amb_key]) return;
@@ -247,6 +269,11 @@ var render_peptide = function(peptide) {
 
 		if (composition.toLowerCase() == 'glcnac(b1-4)glcnac') {
 			composition = 'man(a1-3)[man(a1-6)]man(b1-4)glcnac(b1-4)glcnac';
+			identified = true;
+		}
+
+		if ( ! identified && is_gag_linker(composition_to_lookup(fields.observed)) ) {
+			composition = gag_structure_for(fields.inferred);
 			identified = true;
 		}
 
