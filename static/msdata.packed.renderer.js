@@ -71,20 +71,23 @@ intervals.sort(function(a,b) {
 	}
 });
 
-// Glycosaminoglycan classes (see ccg-data-schemas/glycan-classes.json
-// GAG/CS/HS/KS). GAG/CS/HS share the Xyl-Gal-Gal-GlcA linker tetrasaccharide
-// and differ only in their cap residue (GalNAc for CS, GlcNAc for HS, left
+// GAG-linker classes (see ccg-data-schemas/glycan-classes.json GAG/CS/HS):
+// a glycosaminoglycan attached via the Xyl-Gal-Gal-GlcA linker tetrasaccharide,
+// differing only in their cap residue (GalNAc for CS, GlcNAc for HS, left
 // generic for a bare/unclassified GAG linker) — composition shorthand alone
 // can't tell those caps apart (all collapse to the same HexNAc count), so
-// pick the structure from the glycan class id in `inferred` when we have
-// one. KS is a different, sulfated Gal/GlcNAc repeat with no HexA/Pent at
-// all, so it can only be identified via `inferred`, never from composition.
-var GLYCAN_CLASS_STRUCTURES = {
+// pick the structure from the glycan class id in `inferred` when we have one.
+var GAG_LINKER_STRUCTURES = {
 	CS: 'galnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl',
 	HS: 'glcnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl',
-	GAG: 'hexnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl',
-	KS: '{hso3(u1-6)glcnac(b1-3)[hso3(u1-6)]gal(b1-4)@y3a}nany'
+	GAG: 'hexnac(b1-4)glca(b1-3)gal(b1-3)gal(b1-4)xyl'
 };
+
+// KS is unrelated to the GAG linker above: a sulfated Gal/GlcNAc repeat that
+// can decorate many different backbones (N-glycans, O-mannose, ...), not a
+// cap variant of one specific linker. No shared composition signature either
+// — it's only ever identifiable via the site's `inferred` glycan class id.
+var KS_STRUCTURE = '{hso3(u1-6)glcnac(b1-3)[hso3(u1-6)]gal(b1-4)@y3a}nany';
 
 var is_gag_linker = function(lookup) {
 	return (lookup['HexA'] || 0) >= 1 && (lookup['Pent'] || 0) >= 1;
@@ -94,9 +97,10 @@ var is_gag_linker = function(lookup) {
 // (shouldn't normally happen) still picks one structure deterministically.
 var glycan_class_structure = function(inferred) {
 	inferred = inferred || [];
-	for (var i = 0; i < ['CS','HS','KS','GAG'].length; i++) {
-		var id = ['CS','HS','KS','GAG'][i];
-		if (inferred.indexOf(id) >= 0) return GLYCAN_CLASS_STRUCTURES[id];
+	if (inferred.indexOf('KS') >= 0) return KS_STRUCTURE;
+	for (var i = 0; i < ['CS','HS','GAG'].length; i++) {
+		var id = ['CS','HS','GAG'][i];
+		if (inferred.indexOf(id) >= 0) return GAG_LINKER_STRUCTURES[id];
 	}
 	return null;
 };
@@ -111,7 +115,7 @@ var guess_composition = function(composition,inferred) {
 	if (class_structure) {
 		sugar = '#sugarrendered_' + class_structure;
 	} else if (is_gag_linker(composition_to_lookup(composition))) {
-		sugar = '#sugarrendered_' + GLYCAN_CLASS_STRUCTURES.GAG;
+		sugar = '#sugarrendered_' + GAG_LINKER_STRUCTURES.GAG;
 	}
 	if (comp_string == 'hexhexnac') {
 		// comp_string has already had its counts stripped, so a small
@@ -302,7 +306,7 @@ var render_peptide = function(peptide) {
 				composition = class_structure;
 				identified = true;
 			} else if (is_gag_linker(composition_to_lookup(fields.observed))) {
-				composition = GLYCAN_CLASS_STRUCTURES.GAG;
+				composition = GAG_LINKER_STRUCTURES.GAG;
 				identified = true;
 			}
 		}
