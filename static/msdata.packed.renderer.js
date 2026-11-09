@@ -87,7 +87,11 @@ var GAG_LINKER_STRUCTURES = {
 // can decorate many different backbones (N-glycans, O-mannose, ...), not a
 // cap variant of one specific linker. No shared composition signature either
 // — it's only ever identifiable via the site's `inferred` glycan class id.
-var KS_STRUCTURE = '{hso3(u1-6)glcnac(b1-3)[hso3(u1-6)]gal(b1-4)@y3a}nany';
+// glycan.js's repeat-block grammar (CondensedIupac.js parse_sequence) only
+// accepts a single lowercase letter or a bare integer as the trailing repeat
+// count — "n" (unspecified count), not "nAny"/"n*" — so the IUPAC-adjacent
+// "n*" shorthand in glycan-classes.json's own KS entry won't parse as-is.
+var KS_STRUCTURE = '{hso3(u1-6)glcnac(b1-3)[hso3(u1-6)]gal(b1-4)@y3a}n';
 
 var is_gag_linker = function(lookup) {
 	return (lookup['HexA'] || 0) >= 1 && (lookup['Pent'] || 0) >= 1;
