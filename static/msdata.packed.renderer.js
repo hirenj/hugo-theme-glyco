@@ -215,8 +215,21 @@ var render_peptide = function(peptide) {
 		var mid = Math.floor(0.5*first + 0.5*last);
 		if (isNaN(mid)) return;
 
-		if (asite.observed && DEAMIDATED.indexOf(asite.observed) < 0) {
-			let { sugar, count } = guess_composition(asite.observed,asite.inferred);
+		var is_deamidated = DEAMIDATED.indexOf(asite.observed) >= 0;
+		// A curated/inferred-only ambiguous site (no `observed` at all) still
+		// has a renderable icon when its glycan class is one we have a
+		// canonical structure for (GAG/CS/HS/KS) - not just when something
+		// composition-shaped was actually observed.
+		var class_structure = is_deamidated ? null : glycan_class_structure(asite.inferred);
+
+		if ( (asite.observed || class_structure) && ! is_deamidated ) {
+			let sugar, count;
+			if (asite.observed) {
+				({ sugar, count } = guess_composition(asite.observed,asite.inferred));
+			} else {
+				sugar = '#sugarrendered_' + class_structure;
+				count = 1;
+			}
 			if (! sugar) sugar = asite.observed;
 			var amb_key = 'amb:' + first + '-' + last + sugar;
 			if (seen_sites[amb_key]) return;
@@ -230,7 +243,6 @@ var render_peptide = function(peptide) {
 			// Deamidation (a mass shift, not a sugar) only ever needs a short
 			// label — shown much smaller than a curated/inferred-only label
 			// so it doesn't dominate the track the way a full-size word does.
-			var is_deamidated = DEAMIDATED.indexOf(asite.observed) >= 0;
 			ambiguous_shapes[peptide.acc].push({ "aa" : mid, "type" : "text", "options" : { "offset" : base_offset + 2.5, "height" : is_deamidated ? 4 : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
 		}
 	});
@@ -244,11 +256,19 @@ var render_peptide = function(peptide) {
 		if (! site) return;
 		has_site = true;
 
-		if ( (! fields.observed) || DEAMIDATED.indexOf(fields.observed) >= 0 ) {
-			// Nothing composition-shaped was observed at this exact position
-			// (curated/inferred-only site, or a PNGase F deamidation mass
-			// shift) — nothing to pick a sugar icon from, so label it with
-			// whatever we do have instead of guessing a shape.
+		var is_deamidated = DEAMIDATED.indexOf(fields.observed) >= 0;
+		// A curated/inferred-only site (no `observed` at all) still has a
+		// renderable icon when its glycan class is one we have a canonical
+		// structure for (GAG/CS/HS/KS) - not just when something
+		// composition-shaped was actually observed.
+		var class_structure = is_deamidated ? null : glycan_class_structure(fields.inferred);
+
+		if ( (! fields.observed && ! class_structure) || is_deamidated ) {
+			// Nothing composition-shaped was observed at this exact position,
+			// and no known structure for its glycan class either (curated/
+			// inferred-only site with an unrendered class, or a PNGase F
+			// deamidation mass shift) — nothing to pick a sugar icon from, so
+			// label it with whatever we do have instead of guessing a shape.
 			var label = fields.observed || ((fields.inferred && fields.inferred.length) ? fields.inferred.join(',') : '?');
 			var label_key = site + '|' + label;
 			if (seen_sites[label_key]) return;
@@ -256,15 +276,20 @@ var render_peptide = function(peptide) {
 			// Deamidation (a mass shift, not a sugar) only ever needs a short
 			// label — shown much smaller than a curated/inferred-only label
 			// so it doesn't dominate the track the way a full-size word does.
-			var is_deamidated = DEAMIDATED.indexOf(fields.observed) >= 0;
 			return_data[peptide.acc].push({ "aa" : site, "type" : "text", "options" : { "offset" : base_offset - 9, "height" : is_deamidated ? 4 : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
 			return;
 		}
 
-		var composition = fields.observed.replace(/1x/g,'');
-
+		var composition;
 		let is_sugar = true;
 		let identified = false;
+
+		if (class_structure && ! fields.observed) {
+			composition = class_structure;
+			identified = true;
+		} else {
+
+		composition = fields.observed.replace(/1x/g,'');
 
 		if (composition === "HexNAc") {
 			composition = 'galnac';
@@ -305,7 +330,6 @@ var render_peptide = function(peptide) {
 		}
 
 		if ( ! identified ) {
-			let class_structure = glycan_class_structure(fields.inferred);
 			if (class_structure) {
 				composition = class_structure;
 				identified = true;
@@ -338,8 +362,10 @@ var render_peptide = function(peptide) {
 				if (lookup['HexNAc'] == 2) {
 					composition = 'gal(b1-3)[glcnac(b1-6)]galnac';
 					identified = true;
-				}				
+				}
 			}
+		}
+
 		}
 
 		composition = composition.toLowerCase();
