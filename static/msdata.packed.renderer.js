@@ -203,7 +203,11 @@ var render_peptide = function(peptide) {
 			var label_key = 'amb:' + first + '-' + last + '|' + label;
 			if (seen_sites[label_key]) return;
 			seen_sites[label_key] = true;
-			ambiguous_shapes[peptide.acc].push({ "aa" : mid, "type" : "text", "options" : { "offset" : base_offset + 2.5, "height" : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
+			// Deamidation (a mass shift, not a sugar) only ever needs a short
+			// label — shown much smaller than a curated/inferred-only label
+			// so it doesn't dominate the track the way a full-size word does.
+			var is_deamidated = DEAMIDATED.indexOf(asite.observed) >= 0;
+			ambiguous_shapes[peptide.acc].push({ "aa" : mid, "type" : "text", "options" : { "offset" : base_offset + 2.5, "height" : is_deamidated ? 4 : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
 		}
 	});
 
@@ -225,7 +229,11 @@ var render_peptide = function(peptide) {
 			var label_key = site + '|' + label;
 			if (seen_sites[label_key]) return;
 			seen_sites[label_key] = true;
-			return_data[peptide.acc].push({ "aa" : site, "type" : "text", "options" : { "offset" : base_offset - 9, "height" : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
+			// Deamidation (a mass shift, not a sugar) only ever needs a short
+			// label — shown much smaller than a curated/inferred-only label
+			// so it doesn't dominate the track the way a full-size word does.
+			var is_deamidated = DEAMIDATED.indexOf(fields.observed) >= 0;
+			return_data[peptide.acc].push({ "aa" : site, "type" : "text", "options" : { "offset" : base_offset - 9, "height" : is_deamidated ? 4 : 8, "content" : label, "fill" : "#555", "stroke_width" : 0 } });
 			return;
 		}
 
