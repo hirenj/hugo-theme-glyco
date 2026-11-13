@@ -7,7 +7,9 @@
     {{ else }}
       <a class="home" href="{{ "/" | relURL }}"></a>
     {{ end }}
-    <h1>{{.Title}}</h1>
+    {{ if not .Params.skip_header_heading }}
+      <h1>{{.Title}}</h1>
+    {{ end }}
   {{ else }}
     <h1>{{.Title}}</h1>
     <a class="center" href="https://glycomics.ku.dk"></a>
