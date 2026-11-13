@@ -163,17 +163,28 @@ const setPrefs = (partial) => {
 // them on login/logout below. Unlike those two, the endpoint itself works
 // for an anonymous caller too (returns an empty array rather than 401), so
 // this never needs to wait on getLoginStatus() first.
+//
+// ENABLE_ALL_FLAGS is a dev-only override, orthogonal to SKIP_AUTHENTICATION
+// (which disables auth features entirely, so flags default OFF): a plain
+// `hugo server` dev build has no Worker in front, so /api/account/flags is
+// always unreachable and every flag-gated menu item/content block would
+// otherwise stay hidden no matter what. Set ENABLE_ALL_FLAGS=1 (e.g.
+// `ENABLE_ALL_FLAGS=1 just dev`) to short-circuit straight to the '*'
+// sentinel ccg-userstatus.js's _applyFlags() treats as "every data-flag
+// element is visible" — never reaches the network at all.
 const getFlags = () => {
     if (!flagsPromise) {
-        flagsPromise = process.env.SKIP_AUTHENTICATION
-            ? Promise.resolve([])
-            : fetch(FLAGS_URL, { credentials: 'include' })
-                .then(response => response.ok ? response.json() : { flags: [] })
-                .then(body => body.flags ?? [])
-                .catch(err => {
-                    console.log('[auth] getFlags: /api/account/flags unreachable', err);
-                    return [];
-                });
+        flagsPromise = process.env.ENABLE_ALL_FLAGS
+            ? Promise.resolve('*')
+            : process.env.SKIP_AUTHENTICATION
+                ? Promise.resolve([])
+                : fetch(FLAGS_URL, { credentials: 'include' })
+                    .then(response => response.ok ? response.json() : { flags: [] })
+                    .then(body => body.flags ?? [])
+                    .catch(err => {
+                        console.log('[auth] getFlags: /api/account/flags unreachable', err);
+                        return [];
+                    });
     }
     return flagsPromise;
 };

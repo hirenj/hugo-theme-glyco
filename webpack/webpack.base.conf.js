@@ -27,7 +27,9 @@ class WebpackHashWriter {
 // defined in the environment at all (empty string is fine, undefined is
 // not) — better than the alternative, a `process is not defined`
 // ReferenceError at runtime once this bundle actually loads in a browser.
-const ENV_VARIABLES = ['ROOT_API', 'CLIENT_ID', 'SKIP_AUTHENTICATION'];
+// ENABLE_ALL_FLAGS is the same idea for getFlags()'s dev override — see
+// cloudflare.js.
+const ENV_VARIABLES = ['ROOT_API', 'CLIENT_ID', 'SKIP_AUTHENTICATION', 'ENABLE_ALL_FLAGS'];
 
 const theme = 'hugo-theme-glyco';
 

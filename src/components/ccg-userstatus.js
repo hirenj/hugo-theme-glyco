@@ -34,9 +34,13 @@ function _setUser(user, color) {
 // account's enabled flags are known. `flags` is the full list the backend
 // returned (see getFlags()/`/api/account/flags`) — ORCID-less/anonymous
 // visitors just get `[]`, so every data-flag element stays hidden for them.
+// `flags === '*'` is getFlags()'s ENABLE_ALL_FLAGS dev override (see there)
+// — every data-flag element is revealed regardless of name, so a flag-gated
+// menu/page doesn't block local dev just because /api/account/flags is
+// unreachable without a Worker in front.
 function _applyFlags(flags) {
     document.querySelectorAll('[data-flag]').forEach(el => {
-        el.hidden = !flags.includes(el.dataset.flag);
+        el.hidden = flags !== '*' && !flags.includes(el.dataset.flag);
     });
 }
 

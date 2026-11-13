@@ -134,6 +134,15 @@ section.menu ul > li {
   margin-top: -1px;
 }
 
+/* render_menu.html's flag-gated items (main/apps top-level entries and
+   their children) rely on the native [hidden] attribute. [hidden]'s
+   UA-stylesheet display:none is specificity (0,1,0) — the rule above is
+   (0,1,3) (one class, three type selectors): equal class count, so the
+   extra type selectors win the tie-break and [hidden] loses without this. */
+section.menu ul > li[hidden] {
+  display: none;
+}
+
 section.menu ul > li > * {
   transform: skewX(15deg);
   transform-origin: 0% 0%;
