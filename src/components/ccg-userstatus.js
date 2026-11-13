@@ -28,6 +28,25 @@ function _setUser(user, color) {
     for (const el of _instances) el._update();
 }
 
+// connectedCallback() fires synchronously the instant the HTML parser
+// reaches <ccg-userstatus> — which sits near the top of header.html's
+// .logo section, well before section.menu's own <ul> (rendered later, via
+// menubar.html) has been parsed at all. Calling _applyFlags() straight
+// from there found 0 [data-flag] elements on any page where the browser
+// hadn't yet reached the menu markup (confirmed via document.readyState
+// still "loading" and section.menu missing/empty at that point) — it only
+// ever appeared to work on pages where something else happened to delay
+// the call long enough. Deferred to DOMContentLoaded so it always runs
+// against a fully-parsed document, regardless of where in the page
+// <ccg-userstatus> itself happens to sit.
+function _runApplyFlags(flags) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => _applyFlags(flags), { once: true });
+    } else {
+        _applyFlags(flags);
+    }
+}
+
 // Same convention as render_menu.html's li.nav-private above: a template
 // opts an element into flag-gating by adding data-flag="<flag-name>" and
 // starting it hidden; this is the one place that corrects it once the
@@ -398,7 +417,7 @@ class CCGUserStatus extends HTMLElement {
         // anonymous case), so it's kicked off alongside the login check
         // rather than chained after it — no need to wait on one to resolve
         // the other.
-        getFlags().then(_applyFlags);
+        getFlags().then(_runApplyFlags);
         return getLoginStatus().then(status => {
             if (!status) {
                 _setUser('anonymous');
@@ -482,7 +501,7 @@ class CCGUserStatus extends HTMLElement {
         performLogout()
             .then(() => ensureApiLogin())
             .then(() => _setUser('anonymous'))
-            .then(() => getFlags().then(_applyFlags))
+            .then(() => getFlags().then(_runApplyFlags))
             .catch(err => console.error('ccg-userstatus logout failed', err));
     }
 
