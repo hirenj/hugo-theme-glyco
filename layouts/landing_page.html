@@ -59,8 +59,21 @@
 
     {{/* ── Info cards ──────────────────────────────────────────────────────
          Define via {{% slot "info_cards" %}} ... {{% /slot %}} in the content file.
+
+         Both info_cards and sidebar can be flag-gated together via the
+         optional front-matter key `landing_content_flag` — e.g. a tool whose
+         teaser cards and sidebar blurb shouldn't show until the visitor has
+         a given flag (see render_menu.html / ccg-userstatus.js's _applyFlags
+         for the same hidden + data-flag convention). Left unset (the
+         default for every site today), both render unconditionally — do NOT
+         wrap them in a shared parent element to gate them together: they're
+         separate grid items (`grid-area: cards` / `grid-area: sidebar` in
+         landing_page.css) and grid-area only applies to direct children of
+         .innercontent, so each needs the hidden/data-flag attributes on
+         itself, not on a wrapper.
     */}}
-    <section class="info_cards">
+    {{ $landingFlag := .Params.landing_content_flag | default "" }}
+    <section class="info_cards"{{ if $landingFlag }} hidden data-flag="{{ $landingFlag }}"{{ end }}>
       {{ .Store.Get "info_cards" | safeHTML }}
     </section>
 
@@ -68,7 +81,7 @@
          Preferred: {{% slot "sidebar" %}} ... {{% /slot %}} in the content file.
          Fallback:  layouts/partials/landing_sidebar.html (empty by default).
     */}}
-    <aside class="sidebar">
+    <aside class="sidebar"{{ if $landingFlag }} hidden data-flag="{{ $landingFlag }}"{{ end }}>
       {{ with .Store.Get "sidebar" }}
         {{ . | safeHTML }}
       {{ else }}
