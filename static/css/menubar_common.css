@@ -143,6 +143,35 @@ section.menu ul > li[hidden] {
   display: none;
 }
 
+/* render_menu.html renders a label.collapsed-link after a dropdown's <ul>
+   whenever that dropdown has a usable fallback URL (its own, or its first
+   child's) — the first child itself also carries .child-primary. Once
+   every OTHER child is [hidden] (e.g. flag-gating removed everything but
+   Home), there's nothing left to open a dropdown for: swap the toggle for
+   a plain link to that fallback. :has() scopes this to only a dropdown
+   that actually rendered a collapsed-link — every other dropdown (no
+   collapsed-link in its markup at all) is untouched regardless of its
+   children's visibility. No JS beyond _applyFlags() already setting
+   [hidden] is involved — this entire swap is pure CSS.
+
+   Browser support note: needs :has() (Chrome 105+, Safari 15.4+, Firefox
+   121+) — without it, these dropdowns just keep today's toggle-only
+   behavior (collapsed-link stays hidden, label.collapsed-link's own
+   display:none below is reachable by every browser). */
+section.menu ul > li > label.collapsed-link {
+  display: none;
+}
+
+section.menu ul > li:has(> label.collapsed-link):not(:has(> ul > li:not([hidden]):not(.child-primary))) > input[type="checkbox"],
+section.menu ul > li:has(> label.collapsed-link):not(:has(> ul > li:not([hidden]):not(.child-primary))) > label[for],
+section.menu ul > li:has(> label.collapsed-link):not(:has(> ul > li:not([hidden]):not(.child-primary))) > ul {
+  display: none;
+}
+
+section.menu ul > li:has(> label.collapsed-link):not(:has(> ul > li:not([hidden]):not(.child-primary))) > label.collapsed-link {
+  display: inline-block;
+}
+
 section.menu ul > li > * {
   transform: skewX(15deg);
   transform-origin: 0% 0%;

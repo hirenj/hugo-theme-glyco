@@ -50,6 +50,18 @@
  * _applyFlags() fetches /api/account/flags and un-hides it for accounts
  * that have that flag — the same data-flag convention already used
  * outside menus (see ccg-userstatus.js).
+ *
+ * A dropdown whose children can all end up flag-hidden except one (e.g.
+ * flag-gating every tool page but Home) also gets a `label.collapsed-link`
+ * rendered after its <ul> — a plain link to whichever URL the dropdown
+ * would otherwise exist only to reach (the item's own URL if it has one,
+ * else its first child's). menubar_common.css's `:has()` rule swaps to
+ * that link and hides the checkbox/toggle/dropdown entirely once no child
+ * other than the first (marked `child-primary`) is still visible — pure
+ * CSS, no JS needed beyond _applyFlags() already setting `hidden`. Scoped
+ * via `:has(> label.collapsed-link)` so it only ever affects a dropdown
+ * that actually renders one (first child's URL exists) — never a dropdown
+ * whose children all genuinely lack a usable fallback.
  */}}
 
 {{ $allTop := slice }}
@@ -107,24 +119,35 @@
     {{ end }}
   {{ end }}
   {{ $mainFlag := index $item.Params "flag" | default "" }}
+  {{ $hasOwnChildren := gt (len $item.Children) 0 }}
+  {{ $firstChildURL := "" }}
+  {{ if $hasOwnChildren }}
+    {{ $firstChildURL = (index $item.Children 0).URL }}
+  {{ else if gt (len $extraChildren) 0 }}
+    {{ $firstChildURL = (index $extraChildren 0).item.URL }}
+  {{ end }}
+  {{ $collapsedURL := $item.URL | default $firstChildURL }}
   <li class="nav-main menuitem-main{{$idx}}"{{ if $mainFlag }} hidden data-flag="{{ $mainFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if or $item.HasChildren $extraChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
       <label for="menu{{$idx}}">{{ $item.Name }}</label>
       <ul>
-        {{ range $item.Children }}
-          {{ $childFlag := index .Params "flag" | default "" }}
-          {{ if hasPrefix .URL ".." }}
-          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+        {{ range $cidx, $child := $item.Children }}
+          {{ $childFlag := index $child.Params "flag" | default "" }}
+          {{ $childClass := cond (eq $cidx 0) "child-primary" "" }}
+          {{ if hasPrefix $child.URL ".." }}
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL | relURL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
           {{ else }}
-          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
           {{ end }}
         {{ end }}
-        {{ range $extraChildren }}
-          {{ $extraFlag := index .item.Params "flag" | default "" }}
-          <li class="nav-{{ .menu }}"{{ if $extraFlag }} hidden data-flag="{{ $extraFlag }}"{{ end }}><label><a href="{{ .item.URL }}" title="{{ .item.Title }}">{{ .item.Name }}</a></label></li>
+        {{ range $ecidx, $ec := $extraChildren }}
+          {{ $extraFlag := index $ec.item.Params "flag" | default "" }}
+          {{ $isPrimary := and (not $hasOwnChildren) (eq $ecidx 0) }}
+          <li class="nav-{{ $ec.menu }}{{ if $isPrimary }} child-primary{{ end }}"{{ if $extraFlag }} hidden data-flag="{{ $extraFlag }}"{{ end }}><label><a href="{{ $ec.item.URL }}" title="{{ $ec.item.Title }}">{{ $ec.item.Name }}</a></label></li>
         {{ end }}
       </ul>
+      {{ with $collapsedURL }}<label class="collapsed-link"><a href="{{ . }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>{{ end }}
     {{ else }}
       <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
     {{ end }}
@@ -136,20 +159,27 @@
        (logged-in only). "apps" entrypoint links are meant to be always
        visible, so they're excluded from that default. */}}
   {{ $topFlag := index $item.Params "flag" | default "" }}
+  {{ $firstChildURL := "" }}
+  {{ if gt (len $item.Children) 0 }}
+    {{ $firstChildURL = (index $item.Children 0).URL }}
+  {{ end }}
+  {{ $collapsedURL := $item.URL | default $firstChildURL }}
   <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}"{{ if ne $entry.menu "apps" }} aria-hidden="true"{{ end }}{{ if $topFlag }} hidden data-flag="{{ $topFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if $item.HasChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
       <label for="menu{{$idx}}">{{ $item.Name }}</label>
       <ul>
-        {{ range $item.Children }}
-          {{ $childFlag := index .Params "flag" | default "" }}
-          {{ if hasPrefix .URL ".." }}
-          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+        {{ range $cidx, $child := $item.Children }}
+          {{ $childFlag := index $child.Params "flag" | default "" }}
+          {{ $childClass := cond (eq $cidx 0) "child-primary" "" }}
+          {{ if hasPrefix $child.URL ".." }}
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL | relURL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
           {{ else }}
-          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
           {{ end }}
         {{ end }}
       </ul>
+      {{ with $collapsedURL }}<label class="collapsed-link"><a href="{{ . }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>{{ end }}
     {{ else }}
       <label><a href="{{ $item.URL }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>
     {{ end }}
