@@ -62,8 +62,20 @@
  * via `:has(> label.collapsed-link)` so it only ever affects a dropdown
  * that actually renders one (first child's URL exists) — never a dropdown
  * whose children all genuinely lack a usable fallback.
+ *
+ * A menu child whose URL starts with ".." (e.g. workbench's own
+ * DomainViewer -> "../glycodomain", reaching a sibling app that isn't
+ * itself part of the apps.json family) is resolved against the SITE's own
+ * base path ($siteBasePath below), not the current page's URL. A plain
+ * `| relURL` on a ".."-prefixed string is a no-op in Hugo (relURL doesn't
+ * resolve "..", it just passes relative-looking strings through) — the
+ * browser would otherwise resolve it against whatever page happens to be
+ * rendering the menu, breaking as soon as that page is nested more than
+ * one level deep (e.g. "../sugarbuilder" from "/workbench/fragment/"
+ * wrongly resolves to "/workbench/sugarbuilder/" instead of "/sugarbuilder/").
  */}}
 
+{{ $siteBasePath := (urls.Parse .Site.BaseURL).Path }}
 {{ $allTop := slice }}
 {{ range $menuName, $menuItems := .Site.Menus }}
   {{ range $menuItems }}
@@ -126,6 +138,7 @@
   {{ else if gt (len $extraChildren) 0 }}
     {{ $firstChildURL = (index $extraChildren 0).item.URL }}
   {{ end }}
+  {{ if hasPrefix $firstChildURL ".." }}{{ $firstChildURL = path.Clean (printf "%s/%s" $siteBasePath $firstChildURL) }}{{ end }}
   {{ $collapsedURL := $item.URL | default $firstChildURL }}
   <li class="nav-main menuitem-main{{$idx}}"{{ if $mainFlag }} hidden data-flag="{{ $mainFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if or $item.HasChildren $extraChildren }}
@@ -135,11 +148,9 @@
         {{ range $cidx, $child := $item.Children }}
           {{ $childFlag := index $child.Params "flag" | default "" }}
           {{ $childClass := cond (eq $cidx 0) "child-primary" "" }}
-          {{ if hasPrefix $child.URL ".." }}
-          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL | relURL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
-          {{ else }}
-          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
-          {{ end }}
+          {{ $childHref := $child.URL }}
+          {{ if hasPrefix $childHref ".." }}{{ $childHref = path.Clean (printf "%s/%s" $siteBasePath $childHref) }}{{ end }}
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $childHref }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
         {{ end }}
         {{ range $ecidx, $ec := $extraChildren }}
           {{ $extraFlag := index $ec.item.Params "flag" | default "" }}
@@ -163,6 +174,7 @@
   {{ if gt (len $item.Children) 0 }}
     {{ $firstChildURL = (index $item.Children 0).URL }}
   {{ end }}
+  {{ if hasPrefix $firstChildURL ".." }}{{ $firstChildURL = path.Clean (printf "%s/%s" $siteBasePath $firstChildURL) }}{{ end }}
   {{ $collapsedURL := $item.URL | default $firstChildURL }}
   <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}"{{ if ne $entry.menu "apps" }} aria-hidden="true"{{ end }}{{ if $topFlag }} hidden data-flag="{{ $topFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if $item.HasChildren }}
@@ -172,11 +184,9 @@
         {{ range $cidx, $child := $item.Children }}
           {{ $childFlag := index $child.Params "flag" | default "" }}
           {{ $childClass := cond (eq $cidx 0) "child-primary" "" }}
-          {{ if hasPrefix $child.URL ".." }}
-          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL | relURL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
-          {{ else }}
-          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $child.URL }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
-          {{ end }}
+          {{ $childHref := $child.URL }}
+          {{ if hasPrefix $childHref ".." }}{{ $childHref = path.Clean (printf "%s/%s" $siteBasePath $childHref) }}{{ end }}
+          <li{{ with $childClass }} class="{{ . }}"{{ end }}{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ $childHref }}" title="{{ $child.Title }}">{{ $child.Name }}</a></label></li>
         {{ end }}
       </ul>
       {{ with $collapsedURL }}<label class="collapsed-link"><a href="{{ . }}" title="{{ $item.Title }}">{{ $item.Name }}</a></label>{{ end }}
