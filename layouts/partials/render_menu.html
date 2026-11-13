@@ -40,6 +40,16 @@
  * absolute since they're rendered across multiple sites' baseURLs. This
  * partial has no knowledge of what apps exist — only of this generic data
  * shape.
+ *
+ * Any item — a `main`/grafted Hugo menu entry (via `params.flag` in its
+ * menu config), an apps.json top-level entry, or one of its `children`
+ * (via a sibling `flag` field) — can opt into flag-gating by naming a
+ * flag. That item's <li> then renders with the native `hidden` attribute
+ * plus `data-flag="<name>"`: hidden by default (fail closed for
+ * anonymous/unflagged visitors and with JS off) until ccg-userstatus.js's
+ * _applyFlags() fetches /api/account/flags and un-hides it for accounts
+ * that have that flag — the same data-flag convention already used
+ * outside menus (see ccg-userstatus.js).
  */}}
 
 {{ $allTop := slice }}
@@ -60,9 +70,9 @@
   {{ if and (ne $app.id $selfAppId) (ge $appWeight 0) }}
     {{ $appGrandchildren := slice }}
     {{ range $child := $app.children }}
-      {{ $appGrandchildren = $appGrandchildren | append (dict "URL" $child.path "Title" $child.name "Name" $child.name) }}
+      {{ $appGrandchildren = $appGrandchildren | append (dict "URL" $child.path "Title" $child.name "Name" $child.name "Params" (dict "flag" ($child.flag | default ""))) }}
     {{ end }}
-    {{ $appItem := dict "Identifier" $app.id "Name" $app.name "Title" $app.name "URL" $app.path "Weight" $appWeight "HasChildren" (gt (len $appGrandchildren) 0) "Children" $appGrandchildren "Params" dict }}
+    {{ $appItem := dict "Identifier" $app.id "Name" $app.name "Title" $app.name "URL" $app.path "Weight" $appWeight "HasChildren" (gt (len $appGrandchildren) 0) "Children" $appGrandchildren "Params" (dict "flag" ($app.flag | default "")) }}
     {{ $appParent := $app.parent | default "" }}
     {{ if $appParent }}
       {{ $appChildren = $appChildren | append (dict "item" $appItem "menu" "apps" "parentId" $appParent) }}
@@ -96,20 +106,23 @@
       {{ $extraChildren = $extraChildren | append (dict "item" .item "menu" .menu) }}
     {{ end }}
   {{ end }}
-  <li class="nav-main menuitem-main{{$idx}}" onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+  {{ $mainFlag := index $item.Params "flag" | default "" }}
+  <li class="nav-main menuitem-main{{$idx}}"{{ if $mainFlag }} hidden data-flag="{{ $mainFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if or $item.HasChildren $extraChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
       <label for="menu{{$idx}}">{{ $item.Name }}</label>
       <ul>
         {{ range $item.Children }}
+          {{ $childFlag := index .Params "flag" | default "" }}
           {{ if hasPrefix .URL ".." }}
-          <li><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ else }}
-          <li><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ end }}
         {{ end }}
         {{ range $extraChildren }}
-          <li class="nav-{{ .menu }}"><label><a href="{{ .item.URL }}" title="{{ .item.Title }}">{{ .item.Name }}</a></label></li>
+          {{ $extraFlag := index .item.Params "flag" | default "" }}
+          <li class="nav-{{ .menu }}"{{ if $extraFlag }} hidden data-flag="{{ $extraFlag }}"{{ end }}><label><a href="{{ .item.URL }}" title="{{ .item.Title }}">{{ .item.Name }}</a></label></li>
         {{ end }}
       </ul>
     {{ else }}
@@ -122,16 +135,18 @@
        "pwa" menu (installed-PWA only) or glycome's "private" menu
        (logged-in only). "apps" entrypoint links are meant to be always
        visible, so they're excluded from that default. */}}
-  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}"{{ if ne $entry.menu "apps" }} aria-hidden="true"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
+  {{ $topFlag := index $item.Params "flag" | default "" }}
+  <li class="nav-{{ $entry.menu }} menuitem-{{ $entry.menu }}{{ $idx }}"{{ if ne $entry.menu "apps" }} aria-hidden="true"{{ end }}{{ if $topFlag }} hidden data-flag="{{ $topFlag }}"{{ end }} onfocusout="if ( ! this.contains(event.relatedTarget) ) { this.firstElementChild.checked = false; }">
     {{ if $item.HasChildren }}
       <input type="checkbox" id="menu{{$idx}}" onkeypress="if (event.keyCode == 13) { this.checked = !this.checked; }">
       <label for="menu{{$idx}}">{{ $item.Name }}</label>
       <ul>
         {{ range $item.Children }}
+          {{ $childFlag := index .Params "flag" | default "" }}
           {{ if hasPrefix .URL ".." }}
-          <li><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL | relURL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ else }}
-          <li><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
+          <li{{ if $childFlag }} hidden data-flag="{{ $childFlag }}"{{ end }}><label><a href="{{ .URL }}" title="{{ .Title }}">{{ .Name }}</a></label></li>
           {{ end }}
         {{ end }}
       </ul>
