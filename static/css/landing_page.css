@@ -183,6 +183,14 @@
   gap: 1em;
 }
 
+/* The native [hidden] attribute (landing_page.html's optional
+   landing_content_flag gating) is normally display:none via the UA
+   stylesheet, but that's only specificity (0,1,0) — .info_cards' own
+   display:grid above, at three classes (0,3,0), wins without this. */
+.landing-content .innercontent .info_cards[hidden] {
+  display: none;
+}
+
 .landing-content .innercontent .content_header {
   grid-area: content_header;
   text-align: right;
