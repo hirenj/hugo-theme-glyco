@@ -31,5 +31,53 @@
   --font-control: 0.83333rem; /* 13.33px (10pt): browser default for form controls */
   --font-table: 0.91667rem;  /* 14.67px (11pt): data tables */
   --font-base: 1rem;
+
+  /* Colour scheme. Semantic colours for page-level surfaces and text;
+     components use them with their old literal as the fallback -
+     var(--surface-color, #fff) - so they also work without this partial.
+     Light by default; dark when the system asks for it (unless the page
+     forces data-theme="light"), or when the page sets data-theme="dark"
+     (secret neon mode sets "neon", which is dark too). Like the font
+     sizes, these inherit into shadow roots. */
+  color-scheme: light;
+  --page-background: #ffffff;
+  --text-color: #222222;
+  --muted-text-color: #666666;
+  --surface-color: #ffffff;       /* panels, cards, popovers */
+  --surface-alt-color: #f4f4f6;   /* hover, alternate rows, insets */
+  --border-color: #cccccc;
+  --subtle-border-color: #eeeeee;
+  --input-background: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --page-background: #16141c;
+    --text-color: #e6e3ec;
+    --muted-text-color: #a9a3b6;
+    --surface-color: #211e2a;
+    --surface-alt-color: #2a2635;
+    --border-color: #4a4458;
+    --subtle-border-color: #34303f;
+    --input-background: #1c1a24;
+  }
+}
+
+:root[data-theme="dark"], :root[data-theme="neon"] {
+  color-scheme: dark;
+  --page-background: #16141c;
+  --text-color: #e6e3ec;
+  --muted-text-color: #a9a3b6;
+  --surface-color: #211e2a;
+  --surface-alt-color: #2a2635;
+  --border-color: #4a4458;
+  --subtle-border-color: #34303f;
+  --input-background: #1c1a24;
+}
+
+html {
+  background: var(--page-background);
+  color: var(--text-color);
 }
 </style>

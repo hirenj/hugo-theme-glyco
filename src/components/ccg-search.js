@@ -114,8 +114,10 @@ header {
     width: calc(100% - 2px);
     height: calc( var(--menu-height) - 4px);
     background: #fff;
+    background: light-dark(#fff, var(--input-background, #1c1a24));
     border-radius: 5px;
     border: solid black 1px;
+    border-color: light-dark(black, var(--border-color, #4a4458));
     overflow: hidden;
     z-index: 2;
 }
@@ -192,7 +194,9 @@ input[type=radio] {
     overflow-y: scroll;
     overflow-x: hidden;
     background: #fff;
+    background: light-dark(#fff, var(--surface-color, #211e2a));
     border: solid black 1px;
+    border-color: light-dark(black, var(--border-color, #4a4458));
     border-top: 0px;
     border-radius: 0 0 5px 5px;
     box-shadow: 0 2px 6px rgba(0,0,0,.3);
@@ -258,10 +262,12 @@ div.noresults {
 
 .dropdown-menu, .dropdown-menu:focus-within {
     background: #eee;
+    background: light-dark(#eee, var(--surface-alt-color, #2a2635));
 }
 
 .dropdown-menu input[type=radio]:checked + .d-center {
-    background: #eee
+    background: #eee;
+    background: light-dark(#eee, var(--surface-alt-color, #2a2635));
 }
 
 .dropdown-menu:focus-within input[type=radio]:checked + .d-center {

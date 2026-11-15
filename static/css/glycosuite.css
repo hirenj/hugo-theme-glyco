@@ -137,6 +137,27 @@
 
 }
 
+/* Dark scheme (see global_styles.html for when it applies): the faint
+   tints ("lighter", "lightest" - hovers, selected rows, panels) become
+   faint tints of a dark page instead of near-white; the base colour and
+   its darker shades (button faces) work on both. Also inside
+   [color-override] elements, which recompute the palette from their own
+   base hue. Modern (oklch) browsers only; the hsl fallback stays light. */
+@supports (color: oklch(from red l c h)) {
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]), :root:not([data-theme="light"]) [color-override] {
+      --base-color-lighter: oklch(from var(--base-color) calc(l - 0.2) calc(c - 0.03) h);
+      --base-color-lightest: oklch(from var(--base-color) calc(l - 0.3) calc(c * 0.8) h);
+      --card-border: oklch(from var(--base-color) calc(l - 0.15) 0% h / 0.6);
+    }
+  }
+  :root:is([data-theme="dark"], [data-theme="neon"]), :root:is([data-theme="dark"], [data-theme="neon"]) [color-override] {
+    --base-color-lighter: oklch(from var(--base-color) calc(l - 0.2) calc(c - 0.03) h);
+    --base-color-lightest: oklch(from var(--base-color) calc(l - 0.3) calc(c * 0.8) h);
+    --card-border: oklch(from var(--base-color) calc(l - 0.15) 0% h / 0.6);
+  }
+}
+
 @supports (color: oklch(from red l c calc( h + 1deg ) )) {
 
   :root, [color-override] {
