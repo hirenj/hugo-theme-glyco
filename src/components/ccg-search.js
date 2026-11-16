@@ -34,6 +34,7 @@ tmpl.innerHTML = `<style>
     top: 0px;
     right: 32px;
     color: #555;
+    color: light-dark(#555, var(--text-color, #e6e3ec));
     font-size: 3px;
     margin-top: 0.1em;
     margin-bottom: 0.1em;
@@ -147,7 +148,9 @@ button[type=reset]:before {
     margin: 0px;
     border: 0px;
     background: #ddd;
+    background: light-dark(#ddd, var(--surface-alt-color, #2a2635));
     color: #fff;
+    color: light-dark(#fff, var(--border-color, #4a4458));
     cursor: pointer;
 }
 
@@ -219,7 +222,9 @@ input[type=radio] {
 .dropdown-menu::-webkit-scrollbar-thumb {
     border-radius: 3px;
     background-color: rgba(0,0,0,.2);
+    background-color: light-dark(rgba(0,0,0,.2), rgba(255,255,255,.3));
     -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+    -webkit-box-shadow: 0 0 1px light-dark(rgba(255,255,255,.5), rgba(0,0,0,.5));
 }
 
 header input[type=search] {
@@ -280,6 +285,7 @@ div.noresults {
 
 .dropdown-menu input[type=radio] + .d-center:hover {
     background: #eaeaee;
+    background: light-dark(#eaeaee, var(--surface-alt-color, #2a2635));
     box-shadow: 0px 1px 5px rgba(0,0,0,.5);
 }
 
@@ -294,6 +300,7 @@ div.noresults {
     padding-bottom: 10px;
     height: 2.5em;
     border: solid white 1px;
+    border-color: light-dark(white, var(--surface-alt-color, #2a2635));
 }
 .dropdown-menu .d-center label {
     display: inline-block;
