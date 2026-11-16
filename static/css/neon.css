@@ -32,21 +32,27 @@
    per-component overrides needed. Magenta base (315deg) puts
    --highlight-color at its usual -120deg offset, 195deg: cyan, for free. */
 :root[data-theme="neon"] {
-  --base-hue: 315;
+  /* --base-hue is deliberately NOT set here - secret-mode.js only boosts
+     --base-saturation/--base-lum (set below, and inline to beat a
+     pre-existing inline accent colour) and leaves hue alone, so a user's
+     own accent-colour pick (ccg-userstatus's picker, entirely independent
+     of this file) flows straight into the neon palette instead of being
+     overridden by it. Defaults to the theme's own --base-hue when no
+     accent colour is set. */
   --base-saturation: 96%;
   --base-lum: 62%;
 
   /* Deep-violet surfaces (same hue, near-black lightness) instead of
      dark mode's neutral grays, so panels/borders/text pick up the same
      tint as the buttons rather than clashing with them. */
-  --page-background: oklch(0.12 0.08 315);
-  --surface-color: oklch(0.18 0.09 315);
-  --surface-alt-color: oklch(0.22 0.10 315);
-  --border-color: oklch(0.35 0.15 315);
-  --subtle-border-color: oklch(0.28 0.12 315);
-  --input-background: oklch(0.15 0.08 315);
-  --text-color: oklch(0.92 0.02 315);
-  --muted-text-color: oklch(0.75 0.05 315);
+  --page-background: oklch(0.12 0.08 var(--base-hue));
+  --surface-color: oklch(0.18 0.09 var(--base-hue));
+  --surface-alt-color: oklch(0.22 0.10 var(--base-hue));
+  --border-color: oklch(0.35 0.15 var(--base-hue));
+  --subtle-border-color: oklch(0.28 0.12 var(--base-hue));
+  --input-background: oklch(0.15 0.08 var(--base-hue));
+  --text-color: oklch(0.92 0.02 var(--base-hue));
+  --muted-text-color: oklch(0.75 0.05 var(--base-hue));
 
   --neon-font-family: 'Orbitron', 'Trebuchet MS', Verdana, sans-serif;
 }
