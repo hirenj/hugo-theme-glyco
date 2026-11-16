@@ -118,6 +118,14 @@ customElements.whenDefined('ccg-sviewer-lite').then(() => {
     if (isActive()) for (const el of findSviewerElements()) enter(el);
 });
 
+// Dynamic import() so Tone.js and neon-music.js (~100 KB gzipped
+// together) only ever get fetched the first time secret mode actually
+// activates on a page, in their own webpack chunk - a normal page never
+// loads either. The activating keypress is a trusted user gesture, which
+// is what lets Tone.start() inside the resolved module unlock audio
+// without the browser's autoplay restrictions blocking it.
+const loadMusic = () => import(/* webpackChunkName: "neon-music" */ './neon-music.js');
+
 function activate() {
     const root = document.documentElement;
     savedTheme = root.dataset.theme;
@@ -127,6 +135,7 @@ function activate() {
     root.style.setProperty('--base-saturation', NEON_SATURATION);
     root.style.setProperty('--base-lum', NEON_LUM);
     for (const el of findSviewerElements()) enter(el);
+    loadMusic().then((m) => m.start()).catch((err) => console.error('neon-music failed to load', err));
 }
 
 function deactivate() {
@@ -138,6 +147,7 @@ function deactivate() {
     if (savedLum) root.style.setProperty('--base-lum', savedLum);
     else root.style.removeProperty('--base-lum');
     for (const el of findSviewerElements()) exit(el);
+    loadMusic().then((m) => m.stop()).catch(() => {});
 }
 
 function toggle() {
