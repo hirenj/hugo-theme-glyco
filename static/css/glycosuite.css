@@ -402,6 +402,7 @@ section.info_card {
   border-top: 0px;
 
   background:  rgba(250,250,250,255);
+  background: light-dark(rgba(250,250,250,255), var(--surface-color, #211e2a));
   /*filter: drop-shadow( calc( 1px + var(--info_card-drop-shadow-size)) calc( var(--info_card-drop-shadow-size) + 1px ) var(--info_card-drop-shadow-size) hsla(var(--base-hue),var(--base-saturation),var(--base-lum-percent),var(--info_card-shadow-alpha)));*/
   box-shadow: var(--drop-shadow-offset) var(--drop-shadow-offset) var(--drop-shadow-size) var(--drop-shadow-color) ;
 
