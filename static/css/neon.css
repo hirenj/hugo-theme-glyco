@@ -1,0 +1,212 @@
+/* Secret neon mode (plans/secret-neon-mode.md, phase 6): builds on the
+   dark block (global_styles.html, glycosuite.css) with a vivid
+   magenta/cyan palette instead of the muted violet default, plus glow
+   effects on borders, focus rings and buttons. Everything here is scoped
+   to [data-theme="neon"], so a normal page pays nothing extra - loaded
+   unconditionally (like glycosuite.css/header.css/menubar.css), but every
+   rule only matches once something sets that attribute (currently only by
+   hand/devtools; the Konami-code listener that sets it automatically is
+   phase 3, not built yet).
+
+   Linked last in head.html, after global_styles.html's inline <style> -
+   same selector, same specificity, so this still wins the cascade. */
+
+/* Orbitron (SIL OFL 1.1, Reserved Font Name "Orbitron") - already
+   embedded unmodified in glycan.js (js/Neon/fonts/, licence alongside);
+   same file, copied here so a page's CSS doesn't need glycan.js loaded
+   just to get its heading font. An external url() - not a data: URI -
+   so the browser only fetches it once something actually renders text in
+   it; nothing below applies outside [data-theme="neon"], so normal pages
+   never trigger the request. */
+@font-face {
+  font-family: 'Orbitron';
+  src: url('../fonts/orbitron.ttf') format('truetype');
+  font-weight: 400 900;
+  font-display: swap;
+}
+
+/* Base palette shift: everything derived from --base-hue/--base-saturation
+   (--base-color and its darker/lighter/lightest shades, --highlight-color
+   and --error-color at +-120deg, --main-border-color, --drop-shadow-color,
+   every h3/h4/button.glyco/a.glyco pill) re-tints automatically - no
+   per-component overrides needed. Magenta base (315deg) puts
+   --highlight-color at its usual -120deg offset, 195deg: cyan, for free. */
+:root[data-theme="neon"] {
+  --base-hue: 315;
+  --base-saturation: 96%;
+  --base-lum: 62%;
+
+  /* Deep-violet surfaces (same hue, near-black lightness) instead of
+     dark mode's neutral grays, so panels/borders/text pick up the same
+     tint as the buttons rather than clashing with them. */
+  --page-background: oklch(0.12 0.08 315);
+  --surface-color: oklch(0.18 0.09 315);
+  --surface-alt-color: oklch(0.22 0.10 315);
+  --border-color: oklch(0.35 0.15 315);
+  --subtle-border-color: oklch(0.28 0.12 315);
+  --input-background: oklch(0.15 0.08 315);
+  --text-color: oklch(0.92 0.02 315);
+  --muted-text-color: oklch(0.75 0.05 315);
+
+  --neon-font-family: 'Orbitron', 'Trebuchet MS', Verdana, sans-serif;
+}
+
+/* Display font on headings and the theme's pill buttons/tabs; body text
+   (everything else) keeps the normal font for legibility, per the plan. */
+:root[data-theme="neon"] h1,
+:root[data-theme="neon"] h2,
+:root[data-theme="neon"] h3,
+:root[data-theme="neon"] h4,
+:root[data-theme="neon"] button.glyco,
+:root[data-theme="neon"] a.glyco {
+  font-family: var(--neon-font-family);
+}
+
+/* Glow - a laser beam, not a soft halo: a near-white hot core (tight,
+   opaque) under a thin, saturated colour ring, falling off fast rather
+   than fading gently. The pill buttons/tabs (h3/h4/button.glyco/a.glyco)
+   glow in the base (magenta) colour; focus rings glow in
+   --highlight-color (cyan), so the two accents stay distinct exactly like
+   the plan's "magenta/cyan accents" calls for. */
+/* The angled end-caps (glycosuite.css's h3:before/:after etc, which draw
+   the skewed parallelogram ends) are their own boxes with their own
+   background - box-shadow doesn't inherit from the main element, so
+   they need the same glow listed explicitly or the pill reads as a lit
+   middle with two dark flaps. text-shadow stays off the main element
+   list only: the caps' content is a blank space, nothing to glow. */
+:root[data-theme="neon"] h3,
+:root[data-theme="neon"] h3:before,
+:root[data-theme="neon"] h3:after,
+:root[data-theme="neon"] h4,
+:root[data-theme="neon"] h4:before,
+:root[data-theme="neon"] h4:after,
+:root[data-theme="neon"] button.glyco,
+:root[data-theme="neon"] button.glyco:before,
+:root[data-theme="neon"] button.glyco:after,
+:root[data-theme="neon"] a.glyco,
+:root[data-theme="neon"] a.glyco:before,
+:root[data-theme="neon"] a.glyco:after {
+  box-shadow:
+    0 0 1px 0px oklch(0.97 0.02 var(--base-hue) / 1),
+    0 0 4px 0px oklch(from var(--base-color) calc(l + 0.1) c h / 1),
+    0 0 10px 2px oklch(from var(--base-color) l c h / 0.7),
+    0 0 20px 5px oklch(from var(--base-color) l c h / 0.3);
+}
+
+:root[data-theme="neon"] h3,
+:root[data-theme="neon"] h4,
+:root[data-theme="neon"] button.glyco,
+:root[data-theme="neon"] a.glyco {
+  text-shadow:
+    0 0 2px oklch(0.97 0.02 var(--base-hue) / 1),
+    0 0 8px oklch(from var(--base-color) calc(l + 0.2) c h / 0.9);
+}
+
+:root[data-theme="neon"] button.glyco:hover,
+:root[data-theme="neon"] button.glyco:hover:before,
+:root[data-theme="neon"] button.glyco:hover:after,
+:root[data-theme="neon"] a.glyco:hover,
+:root[data-theme="neon"] a.glyco:hover:before,
+:root[data-theme="neon"] a.glyco:hover:after {
+  box-shadow:
+    0 0 1px 0px oklch(0.99 0.02 var(--base-hue) / 1),
+    0 0 6px 1px oklch(from var(--base-color) calc(l + 0.1) c h / 1),
+    0 0 14px 3px oklch(from var(--base-color) l c h / 0.85),
+    0 0 28px 7px oklch(from var(--base-color) l c h / 0.45);
+}
+
+/* The laser sweep: a bright band drifting across each pill on a loop,
+   like a scanning beam. `h3`/`h4`/`button.glyco`/`a.glyco` already use
+   both :before and :after for their angled end-caps (glycosuite.css), so
+   this can't be another pseudo-element - it's a second background-image
+   layered via the longhand (the base rule's `background: var(--main-color)`
+   shorthand only ever set background-color, so this doesn't fight it),
+   animated via `background-position`. That repaints each pill on every
+   frame rather than compositing for free like a transform would, but
+   it's bounded to a handful of small pill elements, never the whole
+   page, so the cost stays small. */
+:root[data-theme="neon"] h3,
+:root[data-theme="neon"] h4,
+:root[data-theme="neon"] button.glyco,
+:root[data-theme="neon"] a.glyco {
+  background-image: linear-gradient(100deg,
+    transparent 30%,
+    oklch(0.97 0.02 var(--base-hue) / 0.65) 50%,
+    transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 260% 100%;
+  animation: neon-laser-sweep 3.4s ease-in-out infinite;
+}
+@keyframes neon-laser-sweep {
+  0%, 10%   { background-position: -160% 0; }
+  55%, 100% { background-position: 160% 0; }
+}
+
+:root[data-theme="neon"] :focus-visible {
+  outline: 1.5px solid oklch(0.97 0.02 var(--base-hue));
+  outline-offset: 2px;
+  box-shadow:
+    0 0 2px 0px oklch(0.97 0.02 var(--base-hue) / 1),
+    0 0 8px 1px oklch(from var(--highlight-color) l c h / 0.9),
+    0 0 18px 4px oklch(from var(--highlight-color) l c h / 0.5);
+}
+
+:root[data-theme="neon"] fieldset.glyco {
+  border-color: oklch(from var(--base-color) calc(l + 0.1) c h);
+  box-shadow:
+    0 0 2px 0px oklch(from var(--base-color) calc(l + 0.1) c h / 0.9),
+    0 0 10px 1px oklch(from var(--base-color) l c h / 0.5);
+}
+
+/* Laser-grid floor: crisp 1px lines (not blurred/faded), alternating the
+   magenta base and cyan highlight colour, converging toward a horizon
+   two-thirds down the viewport. One fixed, pointer-events:none layer
+   behind all content (negative z-index) - a single paint on theme
+   activation, no animation, so its cost is one-off, not per-frame. */
+:root[data-theme="neon"] body {
+  position: relative;
+}
+:root[data-theme="neon"] body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(90deg,
+      oklch(from var(--base-color) l c h / 0.5) 0 1.5px,
+      transparent 1.5px 64px),
+    repeating-linear-gradient(0deg,
+      oklch(from var(--highlight-color) l c h / 0.35) 0 1px,
+      transparent 1px 48px);
+  background-position: center bottom;
+  mask-image: linear-gradient(to top, black 0%, transparent 66%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 66%);
+  transform: perspective(300px) rotateX(65deg);
+  transform-origin: bottom center;
+}
+
+/* Scanlines: a CRT-style overlay, a single static repeating-gradient at
+   very low opacity - one paint, no animation, negligible cost. */
+:root[data-theme="neon"] body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  pointer-events: none;
+  background-image: repeating-linear-gradient(0deg,
+    oklch(0 0 0 / 0.12) 0 1px,
+    transparent 1px 3px);
+}
+
+/* Techno display type: uppercase + spaced-out, on top of the Orbitron
+   swap above. */
+:root[data-theme="neon"] h1,
+:root[data-theme="neon"] h2,
+:root[data-theme="neon"] h3,
+:root[data-theme="neon"] h4,
+:root[data-theme="neon"] button.glyco,
+:root[data-theme="neon"] a.glyco {
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
