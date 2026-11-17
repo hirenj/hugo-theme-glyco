@@ -19,10 +19,12 @@
 import { registerTheme, applyTheme, revertTheme, isThemeActive } from './theme-takeover.js';
 import { renderer, cssVars, loadMusic, loadCss } from 'neon-glycan.js/theme';
 
+const THEME = 'neon';
+
 const SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
     'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-registerTheme('neon', { renderer, cssVars, loadMusic, loadCss });
+registerTheme(THEME, { renderer, cssVars, loadMusic, loadCss });
 
 // document.activeElement is retargeted to the shadow *host* when focus is inside an open shadow
 // root - this codebase has real shadow-DOM text inputs a user could legitimately be typing into
@@ -35,8 +37,8 @@ function isTypingTarget() {
 }
 
 function toggle() {
-    if (isThemeActive('neon')) revertTheme('neon');
-    else applyTheme('neon');
+    if (isThemeActive(THEME)) revertTheme(THEME);
+    else applyTheme(THEME);
 }
 
 let index = 0;
@@ -45,7 +47,7 @@ window.addEventListener('keydown', (ev) => {
     if (isTypingTarget()) return;
 
     if (ev.key === 'Escape') {
-        if (isThemeActive('neon')) { toggle(); ev.preventDefault(); }
+        if (isThemeActive(THEME)) { toggle(); ev.preventDefault(); }
         return;
     }
 
