@@ -8,33 +8,21 @@
 // revertTheme('neon') - the controller (not this file) owns actually touching the DOM. The
 // renderer-swap mechanics, previously hardcoded here, now live in theme-takeover.js; see its own
 // comments for how they work.
+//
+// Everything neon-specific (the renderer name, neon.css's cssVars, and how to load its CSS and
+// its Tone.js music) comes from neon-glycan.js's own theme descriptor - this file only knows
+// Konami codes and Escape now, per plans/theme-takeover-architecture.md's provider/controller
+// split. loadMusic/loadCss there are both dynamic import()s, only fetched the first time secret
+// mode actually activates on a page; see that module's own comment for why the activating
+// keypress's user gesture matters for Tone.start().
 
 import { registerTheme, applyTheme, revertTheme, isThemeActive } from './theme-takeover.js';
+import { renderer, cssVars, loadMusic, loadCss } from 'neon-glycan.js/theme';
 
 const SEQUENCE = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown',
     'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'b', 'a'];
 
-// Dynamic import() so Tone.js and neon-music.js (~100 KB gzipped together) only ever get fetched
-// the first time secret mode actually activates on a page, in their own webpack chunk - a normal
-// page never loads either. The activating keypress (below) is a trusted user gesture, which is
-// what lets Tone.start() inside the resolved module unlock audio without the browser's autoplay
-// restrictions blocking it: applyTheme() calls this synchronously inside that same keydown
-// handler's call stack (it kicks the import() off and does not await it before returning), so the
-// gesture is still live when the resolved module's start() runs.
-const loadMusic = () => import(/* webpackChunkName: "neon-music" */ './neon-music.js');
-
-registerTheme('neon', {
-    // The vivid saturation/lum neon.css's own :root[data-theme="neon"] block uses - duplicated
-    // here only because they also need forcing as an inline style, to beat a pre-existing inline
-    // accent colour (ccg-userstatus.js's colour picker, via accent-color.js, sets
-    // --base-saturation/--base-lum as inline style on <html>, which always wins over any
-    // stylesheet rule on the same element regardless of selector specificity) - see
-    // theme-takeover.js's registerTheme() comment. Hue is deliberately left out of cssVars, so a
-    // user's own accent-colour pick keeps flowing through untouched.
-    cssVars: { '--base-saturation': '96%', '--base-lum': '62%' },
-    renderer: 'neon',
-    loadMusic,
-});
+registerTheme('neon', { renderer, cssVars, loadMusic, loadCss });
 
 // document.activeElement is retargeted to the shadow *host* when focus is inside an open shadow
 // root - this codebase has real shadow-DOM text inputs a user could legitimately be typing into

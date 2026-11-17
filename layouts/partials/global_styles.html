@@ -36,9 +36,12 @@
      components use them with their old literal as the fallback -
      var(--surface-color, #fff) - so they also work without this partial.
      Light by default; dark when the system asks for it (unless the page
-     forces data-theme="light"), or when the page sets data-theme="dark"
-     (secret neon mode sets "neon", which is dark too). Like the font
-     sizes, these inherit into shadow roots. */
+     forces data-theme="light"), or when the page sets data-theme="dark".
+     Secret neon mode sets data-theme="neon" instead, which supplies its
+     own dark surface colours (neon.css, linked after this partial so it
+     still wins the cascade) rather than needing a case here - see that
+     file's own header on why this used to list "neon" too, and no longer
+     needs to. Like the font sizes, these inherit into shadow roots. */
   color-scheme: light;
   --page-background: #ffffff;
   --text-color: #222222;

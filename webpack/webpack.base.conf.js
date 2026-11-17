@@ -99,20 +99,29 @@ module.exports = {
     // glycosuite.css is imported as plain text by
     // js/components/ccg-styles.js (`glycoStyles.replaceSync(css_data)`) to
     // build a constructable stylesheet adopted into ccg-userstatus's shadow
-    // root — raw-loader gives it back as a plain string, which is what
+    // root — asset/source gives it back as a plain string, which is what
     // replaceSync() needs; css-loader would give back whatever module shape
     // it produces instead, silently leaving <ccg-userstatus> unstyled.
+    // (webpack 5's built-in Asset Modules replace what raw-loader used to be
+    // needed for - no extra dependency or loader step required.)
     {
       test: /glycosuite\.css$/,
-      use: 'raw-loader'
+      type: 'asset/source'
+    },
+    // neon.css (neon-glycan.js) is imported as plain text by its own theme.js (loadCss), then
+    // injected into a <style> tag by theme-takeover.js once secret mode first activates - same
+    // plain-text reasoning as glycosuite.css above, not css-loader's module shape.
+    {
+      test: /neon\.css$/,
+      type: 'asset/source'
     },
     {
       test: /sugars\.svg$/,
-      use: 'raw-loader'
+      type: 'asset/source'
     },
     {
       test: /icons\.svg$/,
-      use: 'raw-loader'
+      type: 'asset/source'
     },
     {
       test: /\.js$/,

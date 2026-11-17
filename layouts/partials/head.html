@@ -78,5 +78,8 @@
 	}
 	</style>
 	{{ partial "global_styles.html" . }}
-	<link href="{{ "./css/neon.css" | relURL }}" rel="stylesheet" type="text/css">
+	{{/* neon.css is no longer linked here - secret-mode.js (bundled into common_bootstrap.js
+	     above) pulls it in as raw text via neon-glycan.js/theme's loadCss and injects it into a
+	     <style> tag itself, lazily, only the first time secret mode actually activates on this
+	     page. See theme-takeover.js's ensureCss() and plans/theme-takeover-architecture.md. */}}
 </head>

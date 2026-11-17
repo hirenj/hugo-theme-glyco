@@ -6,6 +6,12 @@
 // applyTheme()/revertTheme() by name whenever it decides to - the "when" and "why" are entirely
 // the trigger's business, not this module's.
 //
+// A theme's CSS is itself lazy, same as its music: registerTheme()'s optional loadCss field is a
+// () => Promise<string> (a dynamic import() of a .css file through a bundler that hands back raw
+// text), injected into a <style> tag the first time that theme is actually applied - so a page
+// that never triggers secret mode fetches neither Tone.js nor neon.css's own ~51 KB of
+// base64-embedded font.
+//
 // Deliberately has no dependency on sviewer: rather than editing its shared element class, this
 // patches the live class object straight out of the custom-element registry
 // (customElements.get('ccg-sviewer-lite')), the same way ccg-searchbox.js already pulls its base
@@ -26,6 +32,13 @@ const registry = new Map();   // name -> descriptor
 // which a WeakMap can't be.
 const activations = new Map();
 
+// Theme names whose CSS text has already been fetched and injected into <head>, ever - see
+// ensureCss() below. Separate from `activations`: unlike renderer/cssVars state, injected CSS is
+// never removed on revert (a dormant <style> costs nothing - its selectors just don't match once
+// data-theme is gone, same reasoning neon.css's own header gives for the whole file), so this only
+// ever grows, by at most one entry per theme actually used in a page's lifetime.
+const injectedCss = new Set();
+
 // descriptor: {
 //   dataTheme = name:    the data-theme value to set (matches a [data-theme="..."] CSS override)
 //   cssVars = {}:        custom properties to force as an INLINE style on the scope element, not
@@ -45,9 +58,32 @@ const activations = new Map();
 //                        activates - see secret-mode.js's own loadMusic for why that import has to
 //                        happen synchronously inside the activating user gesture, not awaited
 //                        first.
+//   loadCss:             optional () => Promise<string>, the theme's CSS as raw text (e.g. a
+//                        dynamic import() of a .css file through a bundler configured to hand text
+//                        back, same as ccg-styles.js already relies on for glycosuite.css). Fetched
+//                        and injected into a <style data-theme-takeover="name"> tag in <head> the
+//                        first time THIS theme is applied, ever, on this page - not re-fetched on
+//                        later apply/revert cycles, and not awaited before the rest of applyTheme()
+//                        proceeds (renderer swap and cssVars land immediately; the theme's visual
+//                        CSS rules may paint a beat later - a brief, accepted flash, same tradeoff
+//                        loadMusic already makes for when the audio actually starts).
 // }
 export function registerTheme(name, descriptor) {
     registry.set(name, { dataTheme: name, cssVars: {}, ...descriptor });
+}
+
+function ensureCss(name, descriptor) {
+    if (!descriptor.loadCss || injectedCss.has(name)) return;
+    injectedCss.add(name);
+    descriptor.loadCss().then((cssText) => {
+        const style = document.createElement('style');
+        style.dataset.themeTakeover = name;
+        style.textContent = cssText;
+        document.head.appendChild(style);
+    }).catch((err) => {
+        injectedCss.delete(name);   // let a later applyTheme() retry
+        console.error(`theme-takeover: "${name}"'s CSS failed to load`, err);
+    });
 }
 
 export function isThemeActive(name, scope = document.documentElement) {
@@ -171,6 +207,7 @@ export function applyTheme(name, { scope = document.documentElement } = {}) {
     const descriptor = registry.get(name);
     if (!descriptor) throw new Error(`theme-takeover: no theme registered as "${name}"`);
     ensurePatched();
+    ensureCss(name, descriptor);
 
     const savedVars = {};
     for (const prop of Object.keys(descriptor.cssVars)) {
