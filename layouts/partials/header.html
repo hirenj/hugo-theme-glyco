@@ -14,7 +14,10 @@
     <h1>{{.Title}}</h1>
     <a class="center" href="https://glycomics.ku.dk"></a>
   {{ end }}
-  {{ if not .Params.skip_authentication }}
+  {{/* skip_userstatus hides just the widget; skip_authentication (checked in
+       head.html) separately skips the forced-login redirect - a public page
+       can skip the redirect but still show "logged in as.../log in" */}}
+  {{ if not .Params.skip_userstatus }}
     <span class="user"><ccg-userstatus settings-url="{{ with .Site.Params.settings_url }}{{ . | relURL }}{{ end }}"/></span>
   {{ end }}
   {{ partial "user_pageheader.html" }}
